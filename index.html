@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thesis Sprinter: Write or Die</title>
+    <style>
+        :root { --bg: #0f111a; --text: #b3b1ad; --danger: #ff3333; }
+        body { font-family: "SF Mono", "Fira Code", monospace; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; margin: 0; transition: background 0.3s; }
+        #toolbar { padding: 15px; background: #1a1c25; display: flex; gap: 15px; align-items: center; border-bottom: 1px solid #333; }
+        select, input, button { background: #2a2e3a; color: white; border: 1px solid #444; padding: 5px 10px; border-radius: 4px; }
+        #editor { flex-grow: 1; padding: 40px; background: transparent; border: none; color: #e6e6e6; font-size: 1.2rem; line-height: 1.8; outline: none; resize: none; width: 100%; box-sizing: border-box; }
+        .visual-consequence { background: var(--danger) !important; color: white !important; }
+        .ghost-mode { color: rgba(255, 255, 255, 0.1) !important; }
+        #status { font-size: 0.8rem; opacity: 0.7; margin-left: auto; }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <input type="number" id="minutes" value="10" style="width: 50px;"> min
+        <select id="mode">
+            <option value="ghost">Ghost (Text Fades)</option>
+            <option value="alarm">Alarm (Screen Flashes)</option>
+            <option value="kamikaze">Kamikaze (The Classic Wipe)</option>
+        </select>
+        <button id="startBtn">Start Sprint</button>
+        <div id="status">Ready.</div>
+    </div>
+    <textarea id="editor" placeholder="Select a mode and start writing..." disabled></textarea>
+
+    <script>
+        let timer, idleTimer, flashInterval;
+        let timeLeft = 0;
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const modeSelect = document.getElementById('mode');
+
+        function startSession() {
+            timeLeft = document.getElementById('minutes').value * 60;
+            editor.disabled = false;
+            editor.focus();
+            startBtn.disabled = true;
+            timer = setInterval(updateTimer, 1000);
+            resetIdleTimer();
+        }
+
+        function updateTimer() {
+            if (timeLeft <= 0) endSession(true);
+            else {
+                timeLeft--;
+                status.innerText = `Time: ${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2, '0')}`;
+            }
+        }
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            clearInterval(flashInterval);
+            document.body.classList.remove('visual-consequence');
+            editor.classList.remove('ghost-mode');
+
+            idleTimer = setTimeout(triggerConsequence, 5000); // 5 seconds of silence
+        }
+
+        function triggerConsequence() {
+            const mode = modeSelect.value;
+            if (mode === 'ghost') {
+                editor.classList.add('ghost-mode');
+            } else if (mode === 'alarm') {
+                flashInterval = setInterval(() => {
+                    document.body.classList.toggle('visual-consequence');
+                }, 200);
+            } else if (mode === 'kamikaze') {
+                idleTimer = setTimeout(() => {
+                    if (editor.value.length > 0) {
+                        editor.value = "";
+                        status.innerText = "KILLED. Restart required.";
+                        endSession(false);
+                    }
+                }, 5000); // Gives 5 extra seconds before total wipe
+            }
+        }
+
+        async function endSession(success) {
+            clearInterval(timer);
+            clearTimeout(idleTimer);
+            clearInterval(flashInterval);
+            editor.disabled = true;
+            startBtn.disabled = false;
+            if (success) saveToObsidian(editor.value);
+        }
+
+        async function saveToObsidian(content) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: `Sprint_${new Date().toISOString().slice(0,10)}.md`,
+                    types: [{ description: 'Markdown File', accept: {'text/markdown': ['.md']} }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(content);
+                await writable.close();
+                status.innerText = "Saved to Obsidian.";
+            } catch (err) { status.innerText = "Save aborted."; }
+        }
+
+        editor.addEventListener('input', resetIdleTimer);
+        startBtn.addEventListener('click', startSession);
+    </script>
+</body>
+</html>
