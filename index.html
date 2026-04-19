@@ -4,87 +4,108 @@
     <meta charset="UTF-8">
     <title>The Zone | Braindump Writer</title>
     <style>
-        :root { --danger: #ff3333; --bg: #111111; --text: #e0e0e0; --accent: #444; }
-        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace; overflow: hidden; }
-        
-        /* Thin Progress Bar */
-        #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 2px; background: transparent; z-index: 1000; }
-        #progress-bar { width: 0%; height: 100%; background: #ffffff; transition: width 1s linear; opacity: 0.5; }
+        /* Theme Variables */
+        :root {
+            --danger: #ff4757;
+            --bg-night: #121212; --text-night: #e0e0e0; --accent-night: #333; --bar-night: #ffffff;
+            --bg-day: #fbf7f0; --text-day: #5c4b37; --accent-day: #d4c5b0; --bar-day: #8bba94;
+            --transition-speed: 0.5s;
+        }
 
-        /* Setup & Fail Screens */
-        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 2000; gap: 20px; transition: opacity 0.4s ease; }
+        body.theme-night { --bg: var(--bg-night); --text: var(--text-night); --accent: var(--accent-night); --bar: var(--bar-night); --toolbar-bg: rgba(18,18,18,0.95); }
+        body.theme-day { --bg: var(--bg-day); --text: var(--text-day); --accent: var(--accent-day); --bar: var(--bar-day); --toolbar-bg: rgba(251,247,240,0.95); }
+
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace; overflow: hidden; transition: background var(--transition-speed), color var(--transition-speed); }
+        
+        /* Progress Bar */
+        #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: transparent; z-index: 1000; }
+        #progress-bar { width: 0%; height: 100%; background: var(--bar); transition: width 1s linear; opacity: 0.7; }
+
+        /* Screens */
+        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
-        h1 { font-weight: 400; letter-spacing: 2px; margin-bottom: 10px; font-size: 2rem; }
-        .row { display: flex; gap: 15px; align-items: center; margin-bottom: 10px; font-size: 0.95rem; color: #aaa; }
+        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 15px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        body.theme-night .setup-box { background: rgba(255,255,255,0.02); }
+
+        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 10px 0; font-size: 2.2rem; }
+        .row { display: flex; gap: 12px; align-items: center; font-size: 0.95rem; width: 100%; justify-content: space-between; }
         
-        /* Minimalist UI Elements */
-        button, select { padding: 10px 20px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 4px; font-family: inherit; font-size: 1rem; transition: all 0.2s; }
-        button:hover, select:hover { background: #222; border-color: #888; }
-        input[type="checkbox"] { accent-color: #fff; transform: scale(1.2); cursor: pointer; }
+        /* UI Elements */
+        button, select, input[type="number"] { padding: 10px 16px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 8px; font-family: inherit; font-size: 1rem; transition: all 0.2s; outline: none; }
+        button:hover, select:hover, input[type="number"]:focus { background: var(--accent); color: var(--bg); }
+        input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.2); cursor: pointer; }
+
+        .theme-toggle { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
+        .theme-toggle:hover { background: none; transform: scale(1.1); }
 
         /* Writing Zone */
-        #writing-area { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; }
-        #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; }
+        #writing-area { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 60px 40px; box-sizing: border-box; }
+        #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
         
-        #visual-display { width: 100%; max-width: 800px; height: 85vh; font-size: 1.25rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; color: #ccc; transition: filter 0.3s ease; padding-right: 20px; padding-bottom: 100px; }
+        #visual-display { width: 100%; max-width: 750px; height: 85vh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 150px; }
         
-        /* Custom Scrollbar for review mode */
         #visual-display::-webkit-scrollbar { width: 6px; }
-        #visual-display::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        #visual-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
-        /* The Hardcore Effect */
-        .hardcore { filter: blur(10px); }
+        .hardcore { filter: blur(8px); opacity: 0.8; }
         
-        /* Flashing Character */
-        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14rem; font-weight: 300; color: rgba(255,255,255,0.06); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; text-transform: uppercase; }
+        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; font-weight: 300; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; opacity: 0.05; }
         
         /* Danger Effects */
-        #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,0,0,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
-        .warning-glow { box-shadow: inset 0 0 120px rgba(255,0,0,0.5) !important; }
+        #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,71,87,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
+        .warning-glow { box-shadow: inset 0 0 80px rgba(255,71,87,0.4) !important; }
 
         /* Post-Session Toolbar */
-        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 25px; background: rgba(17,17,17,0.95); border-top: 1px solid #222; display: flex; justify-content: center; align-items: center; gap: 20px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); }
+        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: 1px solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); backdrop-filter: blur(10px); }
         #success-toolbar.visible { transform: translateY(0); }
     </style>
 </head>
-<body>
+<body class="theme-night">
+
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</button>
 
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div id="vignette"></div>
     <div id="flash-char"></div>
 
     <div id="setup-screen" class="screen">
-        <h1>THE ZONE</h1>
-        <div class="row">
-            <span>Duration:</span>
-            <select id="timer-select">
-                <option value="1">1 Min (Test)</option>
-                <option value="2.83">2:50 (The Sprint)</option>
-                <option value="5">5 Mins</option>
-                <option value="10" selected>10 Mins</option>
-            </select>
+        <div class="setup-box">
+            <h1>THE ZONE</h1>
+            <div class="row">
+                <span>Duration:</span>
+                <select id="timer-select" onchange="checkCustomTime()">
+                    <option value="1">1 Min</option>
+                    <option value="2.83">2:50 (Sprint)</option>
+                    <option value="5">5 Mins</option>
+                    <option value="10" selected>10 Mins</option>
+                    <option value="15">15 Mins</option>
+                    <option value="custom">Custom...</option>
+                </select>
+            </div>
+            <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1" style="width: 100%; box-sizing: border-box;">
+            
+            <div class="row">
+                <label for="hardcore-toggle">Hardcore (Blur & Wipe)</label>
+                <input type="checkbox" id="hardcore-toggle" checked> 
+            </div>
+            <div class="row">
+                <label for="music-toggle">Play Lofi Beats</label>
+                <input type="checkbox" id="music-toggle" checked> 
+            </div>
+            <button onclick="initSession()" style="margin-top: 15px; width: 100%; font-weight: bold; border-width: 2px;">START WRITING</button>
         </div>
-        <div class="row">
-            <input type="checkbox" id="hardcore-toggle" checked> 
-            <label for="hardcore-toggle">Hardcore (Blur & 6s Wipe)</label>
-        </div>
-        <div class="row">
-            <input type="checkbox" id="music-toggle" checked> 
-            <label for="music-toggle">Play Lofi Beats</label>
-        </div>
-        <button onclick="initSession()" style="margin-top: 30px; border-color: #fff; color: #fff;">START SPRINT</button>
     </div>
 
-    <div id="fail-screen" class="screen hidden" style="background: rgba(17,17,17,0.98);">
-        <h1 style="color: var(--danger); font-size: 4rem;">KILLED.</h1>
-        <p style="color: #666; font-size: 1.2rem;">You hesitated for 6 seconds. The text is gone.</p>
-        <button onclick="returnToSetup()" style="margin-top: 30px;">Start Over</button>
+    <div id="fail-screen" class="screen hidden">
+        <h1 style="color: var(--danger); font-size: 3rem;">HESITATION.</h1>
+        <p style="opacity: 0.7; margin-bottom: 30px;">The text is gone. Take a breath and try again.</p>
+        <button onclick="returnToSetup()">Restart</button>
     </div>
 
     <div id="success-toolbar">
-        <span style="color: #aaa; margin-right: 20px; font-size: 0.9rem;">Sprint Complete. Review your work.</span>
-        <button id="save-btn" onclick="saveWork()">Save to Mac (.md)</button>
+        <span style="opacity: 0.7; margin-right: 15px; font-size: 0.9rem;">Timer done. Keep writing, or save when ready.</span>
+        <button id="save-btn" onclick="saveWork()">Save (.md)</button>
         <button onclick="returnToSetup()">New Session</button>
     </div>
 
@@ -100,7 +121,7 @@
     <script>
         let duration, timeLeft, clock, dangerTimer;
         let lastInputTime = Date.now();
-        let isSessionActive = false;
+        let isDangerActive = false; 
         
         const screens = { setup: document.getElementById('setup-screen'), fail: document.getElementById('fail-screen') };
         const input = document.getElementById('real-input');
@@ -111,43 +132,64 @@
         const player = document.getElementById('player');
         const toolbar = document.getElementById('success-toolbar');
 
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+            if (body.classList.contains('theme-night')) {
+                body.classList.replace('theme-night', 'theme-day');
+                btn.innerText = '🌙';
+            } else {
+                body.classList.replace('theme-day', 'theme-night');
+                btn.innerText = '☀️';
+            }
+        }
+
+        function checkCustomTime() {
+            const select = document.getElementById('timer-select');
+            const customInput = document.getElementById('custom-time');
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
         function showScreen(screenKey) {
             Object.values(screens).forEach(s => s.classList.add('hidden'));
             if (screenKey) screens[screenKey].classList.remove('hidden');
         }
 
         function initSession() {
-            duration = parseFloat(document.getElementById('timer-select').value) * 60;
-            timeLeft = duration;
-            isSessionActive = true;
+            const selectVal = document.getElementById('timer-select').value;
+            const minutes = selectVal === 'custom' ? document.getElementById('custom-time').value : selectVal;
             
-            // Reset fields
+            if (!minutes || minutes <= 0) return alert("Please enter a valid time.");
+
+            duration = parseFloat(minutes) * 60;
+            timeLeft = duration;
+            isDangerActive = true;
+            
             input.value = "";
             display.innerText = "";
             bar.style.width = "0%";
             toolbar.classList.remove('visible');
-            input.style.display = 'block';
             
-            // Fullscreen trigger
             if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
             
-            // Audio trigger
             if (document.getElementById('music-toggle').checked) {
                 player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            } else {
-                player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
             }
 
-            // Set Hardcore mode
             if (document.getElementById('hardcore-toggle').checked) {
                 display.classList.add('hardcore');
             } else {
                 display.classList.remove('hardcore');
             }
 
-            showScreen(null); // Hide all overlays
+            showScreen(null);
             input.disabled = false;
             input.focus();
             
@@ -161,97 +203,91 @@
             const percent = ((duration - timeLeft) / duration) * 100;
             bar.style.width = percent + "%";
             
-            if (timeLeft <= 0) endSession(true);
+            if (timeLeft <= 0) endTimerPhase();
         }
 
         function dangerLoop() {
             dangerTimer = setInterval(() => {
-                if (!isSessionActive) return;
+                if (!isDangerActive) return;
                 
                 const idleTime = Date.now() - lastInputTime;
                 
-                // 2 second warning
                 if (idleTime > 2000) { 
                     vignette.classList.add('warning-glow');
                 } else {
                     vignette.classList.remove('warning-glow');
                 }
 
-                // 6 second wipe logic
                 if (idleTime > 6000 && document.getElementById('hardcore-toggle').checked) { 
-                    endSession(false);
+                    killSession();
                 }
             }, 100);
         }
 
-        input.addEventListener('input', (e) => {
-            if (!isSessionActive) return;
+        input.addEventListener('input', () => {
             lastInputTime = Date.now();
             display.innerText = input.value;
-            
-            // Auto-scroll so you never type off the bottom of the screen
             display.scrollTop = display.scrollHeight;
 
-            // Flash effect for the last typed character
-            const lastChar = input.value.slice(-1);
-            if (lastChar && lastChar.trim() !== '') {
-                flash.innerText = lastChar;
-                flash.style.opacity = 1;
-                setTimeout(() => flash.style.opacity = 0, 150);
+            if (isDangerActive) {
+                const lastChar = input.value.slice(-1);
+                if (lastChar && lastChar.trim() !== '') {
+                    flash.innerText = lastChar;
+                    flash.style.opacity = 0.2;
+                    setTimeout(() => flash.style.opacity = 0, 150);
+                }
             }
         });
 
-        function endSession(success) {
-            isSessionActive = false;
+        // Triggered when timer naturally finishes
+        function endTimerPhase() {
             clearInterval(clock);
             clearInterval(dangerTimer);
-            input.disabled = true;
+            isDangerActive = false; // Danger is over, but writing can continue!
             vignette.classList.remove('warning-glow');
-            
+            display.classList.remove('hardcore');
+            toolbar.classList.add('visible');
             player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-
-            if (success) {
-                // Lift the blur so you can read your work!
-                display.classList.remove('hardcore');
-                // Hide the invisible input so you can scroll the text natively
-                input.style.display = 'none'; 
-                // Slide up the save/restart toolbar
-                toolbar.classList.add('visible');
-            } else {
-                input.value = "";
-                display.innerText = "";
-                showScreen('fail');
-            }
         }
 
-        async function saveWork() {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: `Sprint_${new Date().toISOString().split('T')[0]}.md`,
-                    types: [{ description: 'Markdown File', accept: {'text/markdown': ['.md']} }]
-                });
-                const writable = await handle.createWritable();
-                await writable.write(input.value);
-                await writable.close();
-                
-                const saveBtn = document.getElementById('save-btn');
-                saveBtn.innerText = "✓ Saved Successfully";
-                saveBtn.style.color = "#00ff88";
-                saveBtn.style.borderColor = "#00ff88";
-            } catch(e) {
-                console.log("Save cancelled");
-            }
+        // Triggered if you fail the Hardcore mode
+        function killSession() {
+            clearInterval(clock);
+            clearInterval(dangerTimer);
+            isDangerActive = false;
+            input.disabled = true;
+            vignette.classList.remove('warning-glow');
+            player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            
+            input.value = "";
+            display.innerText = "";
+            showScreen('fail');
+        }
+
+        function saveWork() {
+            const content = input.value;
+            if (!content) return;
+
+            // Bulletproof Local Save (Blob Method)
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Braindump_${new Date().toISOString().split('T')[0]}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.innerText = "✓ Saved";
+            setTimeout(() => saveBtn.innerText = "Save (.md)", 2000);
         }
 
         function returnToSetup() {
             showScreen('setup');
             toolbar.classList.remove('visible');
-            
-            // Reset the save button UI if it was clicked
-            const saveBtn = document.getElementById('save-btn');
-            saveBtn.innerText = "Save to Mac (.md)";
-            saveBtn.style.color = "";
-            saveBtn.style.borderColor = "";
+            document.getElementById('theme-btn').style.display = 'block';
         }
     </script>
 </body>
