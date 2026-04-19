@@ -2,108 +2,164 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Thesis Sprinter: Write or Die</title>
+    <title>HARDCORE WRITER</title>
     <style>
-        :root { --bg: #0f111a; --text: #b3b1ad; --danger: #ff3333; }
-        body { font-family: "SF Mono", "Fira Code", monospace; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; margin: 0; transition: background 0.3s; }
-        #toolbar { padding: 15px; background: #1a1c25; display: flex; gap: 15px; align-items: center; border-bottom: 1px solid #333; }
-        select, input, button { background: #2a2e3a; color: white; border: 1px solid #444; padding: 5px 10px; border-radius: 4px; }
-        #editor { flex-grow: 1; padding: 40px; background: transparent; border: none; color: #e6e6e6; font-size: 1.2rem; line-height: 1.8; outline: none; resize: none; width: 100%; box-sizing: border-box; }
-        .visual-consequence { background: var(--danger) !important; color: white !important; }
-        .ghost-mode { color: rgba(255, 255, 255, 0.1) !important; }
-        #status { font-size: 0.8rem; opacity: 0.7; margin-left: auto; }
+        :root { --danger: #ff3333; --bg: #0a0a0a; }
+        body { margin: 0; padding: 0; background: var(--bg); color: #fff; font-family: "SF Mono", monospace; overflow: hidden; }
+        
+        /* Progress Bar */
+        #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: #222; z-index: 1000; }
+        #progress-bar { width: 0%; height: 100%; background: #00ff88; transition: width 1s linear; }
+
+        /* Setup Overlay */
+        #setup { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10,10,10,0.95); z-index: 2000; gap: 20px; transition: opacity 0.5s; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        button, select { padding: 12px 24px; background: #1a1a1a; border: 1px solid #333; color: white; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #333; }
+
+        /* Writing Zone */
+        #writing-area { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: default; }
+        
+        #visual-display { width: 80%; max-width: 800px; font-size: 1.5rem; line-height: 1.6; text-align: left; transition: filter 0.2s; white-space: pre-wrap; word-wrap: break-word; }
+        .hardcore { filter: blur(8px); }
+        
+        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8rem; font-weight: bold; color: rgba(255,255,255,0.2); pointer-events: none; opacity: 0; }
+        
+        /* Danger Effects */
+        #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,0,0,0); transition: box-shadow 0.3s; z-index: 5; }
+        .warning-glow { box-shadow: inset 0 0 150px rgba(255,0,0,0.6) !important; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div id="toolbar">
-        <input type="number" id="minutes" value="10" style="width: 50px;"> min
-        <select id="mode">
-            <option value="ghost">Ghost (Text Fades)</option>
-            <option value="alarm">Alarm (Screen Flashes)</option>
-            <option value="kamikaze">Kamikaze (The Classic Wipe)</option>
-        </select>
-        <button id="startBtn">Start Sprint</button>
-        <div id="status">Ready.</div>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="vignette"></div>
+    <div id="flash-char"></div>
+
+    <div id="setup">
+        <h1>STAY FOCUSED</h1>
+        <div class="row">
+            <span>Time:</span>
+            <select id="timer-select">
+                <option value="1">1 Min</option>
+                <option value="3">3 Mins</option>
+                <option value="5">5 Mins</option>
+                <option value="10">10 Mins</option>
+                <option value="2.83">2:50 (The Sprint)</option>
+            </select>
+        </div>
+        <div class="row">
+            <input type="checkbox" id="hardcore-toggle" checked> <label>Hardcore Mode (Blurred History)</label>
+        </div>
+        <div class="row">
+            <input type="checkbox" id="music-toggle" checked> <label>Play Chill Beats</label>
+        </div>
+        <button onclick="init()">START SPRINT</button>
     </div>
-    <textarea id="editor" placeholder="Select a mode and start writing..." disabled></textarea>
+
+    <div id="music-container" class="hidden">
+        <iframe id="player" width="1" height="1" src="https://www.youtube.com/embed/jfKfPfyJRdk?enablejsapi=1&loop=1&playlist=jfKfPfyJRdk" frameborder="0"></iframe>
+    </div>
+
+    <div id="writing-area">
+        <textarea id="real-input" spellcheck="false" autocomplete="off"></textarea>
+        <div id="visual-display"></div>
+    </div>
 
     <script>
-        let timer, idleTimer, flashInterval;
-        let timeLeft = 0;
-        const editor = document.getElementById('editor');
-        const status = document.getElementById('status');
-        const startBtn = document.getElementById('startBtn');
-        const modeSelect = document.getElementById('mode');
+        let duration, timeLeft, clock, dangerTimer;
+        let lastInputTime = Date.now();
+        
+        const setup = document.getElementById('setup');
+        const input = document.getElementById('real-input');
+        const display = document.getElementById('visual-display');
+        const flash = document.getElementById('flash-char');
+        const vignette = document.getElementById('vignette');
+        const bar = document.getElementById('progress-bar');
 
-        function startSession() {
-            timeLeft = document.getElementById('minutes').value * 60;
-            editor.disabled = false;
-            editor.focus();
-            startBtn.disabled = true;
-            timer = setInterval(updateTimer, 1000);
-            resetIdleTimer();
+        function init() {
+            duration = parseFloat(document.getElementById('timer-select').value) * 60;
+            timeLeft = duration;
+            
+            // Fullscreen & Music
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            if (document.getElementById('music-toggle').checked) {
+                document.getElementById('player').contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            }
+
+            // Mode Logic
+            if (document.getElementById('hardcore-toggle').checked) display.classList.add('hardcore');
+
+            setup.classList.add('hidden');
+            input.disabled = false;
+            input.focus();
+            
+            clock = setInterval(tick, 1000);
+            dangerLoop();
         }
 
-        function updateTimer() {
+        function tick() {
+            timeLeft--;
+            const percent = ((duration - timeLeft) / duration) * 100;
+            bar.style.width = percent + "%";
+            
             if (timeLeft <= 0) endSession(true);
-            else {
-                timeLeft--;
-                status.innerText = `Time: ${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2, '0')}`;
+        }
+
+        function dangerLoop() {
+            dangerTimer = setInterval(() => {
+                const idleTime = Date.now() - lastInputTime;
+                
+                if (idleTime > 2000) { // Start warning at 2 seconds
+                    vignette.classList.add('warning-glow');
+                } else {
+                    vignette.classList.remove('warning-glow');
+                }
+
+                if (idleTime > 6000) { // DEATH at 6 seconds
+                    input.value = "";
+                    display.innerText = "SESSISON FAILED. TEXT WIPED.";
+                    endSession(false);
+                }
+            }, 100);
+        }
+
+        input.addEventListener('input', (e) => {
+            lastInputTime = Date.now();
+            display.innerText = input.value;
+            
+            // Flash the last character
+            const lastChar = input.value.slice(-1);
+            if (lastChar) {
+                flash.innerText = lastChar;
+                flash.style.opacity = 1;
+                setTimeout(() => flash.style.opacity = 0, 150);
             }
-        }
-
-        function resetIdleTimer() {
-            clearTimeout(idleTimer);
-            clearInterval(flashInterval);
-            document.body.classList.remove('visual-consequence');
-            editor.classList.remove('ghost-mode');
-
-            idleTimer = setTimeout(triggerConsequence, 5000); // 5 seconds of silence
-        }
-
-        function triggerConsequence() {
-            const mode = modeSelect.value;
-            if (mode === 'ghost') {
-                editor.classList.add('ghost-mode');
-            } else if (mode === 'alarm') {
-                flashInterval = setInterval(() => {
-                    document.body.classList.toggle('visual-consequence');
-                }, 200);
-            } else if (mode === 'kamikaze') {
-                idleTimer = setTimeout(() => {
-                    if (editor.value.length > 0) {
-                        editor.value = "";
-                        status.innerText = "KILLED. Restart required.";
-                        endSession(false);
-                    }
-                }, 5000); // Gives 5 extra seconds before total wipe
-            }
-        }
+        });
 
         async function endSession(success) {
-            clearInterval(timer);
-            clearTimeout(idleTimer);
-            clearInterval(flashInterval);
-            editor.disabled = true;
-            startBtn.disabled = false;
-            if (success) saveToObsidian(editor.value);
-        }
+            clearInterval(clock);
+            clearInterval(dangerTimer);
+            input.disabled = true;
+            document.getElementById('player').contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
 
-        async function saveToObsidian(content) {
-            try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: `Sprint_${new Date().toISOString().slice(0,10)}.md`,
-                    types: [{ description: 'Markdown File', accept: {'text/markdown': ['.md']} }]
-                });
-                const writable = await handle.createWritable();
-                await writable.write(content);
-                await writable.close();
-                status.innerText = "Saved to Obsidian.";
-            } catch (err) { status.innerText = "Save aborted."; }
+            if (success && input.value.length > 0) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: `Sprint_${new Date().toISOString().split('T')[0]}.md`,
+                        types: [{ description: 'Markdown', accept: {'text/markdown': ['.md']} }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(input.value);
+                    await writable.close();
+                    alert("Sprint Saved to Obsidian!");
+                } catch(e) { console.log("Save cancelled"); }
+            }
+            location.reload(); // Reset to setup
         }
-
-        editor.addEventListener('input', resetIdleTimer);
-        startBtn.addEventListener('click', startSession);
     </script>
 </body>
 </html>
