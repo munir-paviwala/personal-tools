@@ -37,19 +37,22 @@
         .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; }
         input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.2); cursor: pointer; }
 
-        /* Floating Toggles (Theme & Credits) */
-        .floating-btn { position: fixed; opacity: 0.15; transition: opacity 0.3s ease; z-index: 3000; cursor: pointer; font-size: 0.9rem; }
+        /* Floating Toggles (Theme, Mute, Credits) */
+        .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
+        
+        .floating-btn { opacity: 0.15; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
         .floating-btn:hover { opacity: 1; }
         
-        #theme-wrapper { top: 20px; right: 20px; }
         .theme-switch { width: 56px; height: 30px; background: var(--accent); border-radius: 15px; position: relative; padding: 4px; box-sizing: border-box; transition: background 0.3s; }
         .theme-switch::after { content: "🌙"; position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
         body.theme-day .theme-switch::after { content: "☀️"; transform: translateX(26px); }
 
-        #credits-btn { bottom: 20px; left: 20px; padding: 5px 10px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--text); width: auto; }
+        .mute-btn { width: 40px; height: 40px; border: 1px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text); font-size: 1.2rem; }
+
+        #credits-btn { position: fixed; bottom: 20px; left: 20px; padding: 5px 10px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--text); width: auto; z-index: 3000; }
 
         /* Modal Overlay */
-        #credits-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 4000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        #credits-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; line-height: 1.6; position: relative; }
         .modal-content p { font-size: 0.9rem; margin: 10px 0; }
         .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; }
@@ -77,8 +80,13 @@
 
     <audio id="bg-music"></audio>
 
-    <div id="theme-wrapper" class="floating-btn" onclick="toggleTheme()">
-        <div class="theme-switch"></div>
+    <div class="floating-controls">
+        <div id="theme-wrapper" class="floating-btn" onclick="toggleTheme()">
+            <div class="theme-switch"></div>
+        </div>
+        <div id="mute-wrapper" class="floating-btn" onclick="toggleMute()">
+            <div class="mute-btn" id="mute-icon">🔊</div>
+        </div>
     </div>
     
     <button id="credits-btn" class="floating-btn" onclick="toggleCredits(true)">Music Credits</button>
@@ -198,6 +206,17 @@
             }
         }
 
+        function toggleMute() {
+            const icon = document.getElementById('mute-icon');
+            if (musicPlayer.muted) {
+                musicPlayer.muted = false;
+                icon.innerText = "🔊";
+            } else {
+                musicPlayer.muted = true;
+                icon.innerText = "🔇";
+            }
+        }
+
         function toggleCredits(show) {
             const modal = document.getElementById('credits-modal');
             if (show) modal.classList.remove('hidden');
@@ -240,9 +259,11 @@
             }
             
             if (document.getElementById('music-toggle').checked) {
-                musicPlayer.src = playlist[currentTrackIndex]; // Set the current track
-                musicPlayer.volume = 0.5;
-                musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+                if (!musicPlayer.src || musicPlayer.paused) {
+                    musicPlayer.src = playlist[currentTrackIndex];
+                    musicPlayer.volume = 0.5;
+                    musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+                }
             }
 
             if (document.getElementById('visual-mode').value === 'blur') {
@@ -317,7 +338,7 @@
             vignette.classList.remove('warning-glow');
             display.classList.remove('hardcore');
             toolbar.classList.add('visible');
-            musicPlayer.pause();
+            // Music continues playing
         }
 
         function killSession() {
@@ -326,7 +347,7 @@
             isSessionActive = false;
             input.disabled = true;
             vignette.classList.remove('warning-glow');
-            musicPlayer.pause();
+            // Music continues playing
             
             input.value = "";
             display.innerText = "";
