@@ -1,7 +1,20 @@
+Saving user preferences using `localStorage` is not a privacy issue. It is a standard web API that stores data strictly on the user's local device (their phone or computer). That data never touches a server or leaves their browser unless you specifically write code to transmit it. It is the perfect, secure solution for remembering UI settings. 
+
+I have rewritten your code to implement your requests. Here is what changed to make this more forward-thinking and functional:
+
+1.  **Local Storage Implementation:** The app now saves the user's settings (duration, visual mode, danger mode, and music toggle) to `localStorage` the moment they hit "START WRITING". When they reload the page, those exact settings are restored. If it's their first time, it defaults to 5 minutes as you requested.
+2.  **Mobile Optimization:** * Swapped `100vh` for `100dvh` (Dynamic Viewport Height). This prevents mobile browsers from hiding the text area or toolbar behind the digital keyboard when it pops up.
+    * Added CSS media queries to shrink the giant flash character, reduce padding, stack the toolbar buttons, and resize the setup box on smaller screens. 
+3.  **The Tribute:** Added a subtle "About" button next to the credits in the bottom left. It triggers a clean modal explaining the app's mechanism and pays homage to "The Most Dangerous Writing App" without clogging the main interface.
+
+Here is the updated code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Zone | Braindump Writer</title>
     <style>
         :root {
@@ -25,10 +38,10 @@
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
-        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 15px; align-items: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 15px; align-items: center; width: 320px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; }
         body.theme-night .setup-box { background: rgba(255,255,255,0.02); }
 
-        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 10px 0; font-size: 2.2rem; }
+        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 10px 0; font-size: 2.2rem; text-align: center; }
         .row { display: flex; flex-direction: column; gap: 5px; font-size: 0.95rem; width: 100%; align-items: flex-start; }
         
         button, select, input[type="number"] { width: 100%; padding: 10px 16px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 8px; font-family: inherit; font-size: 1rem; transition: all 0.2s; outline: none; box-sizing: border-box; }
@@ -37,10 +50,10 @@
         .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; }
         input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.2); cursor: pointer; }
 
-        /* Floating Toggles (Theme, Mute, Credits) */
+        /* Floating Toggles */
         .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
         
-        .floating-btn { opacity: 0.15; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
+        .floating-btn { opacity: 0.25; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
         .floating-btn:hover { opacity: 1; }
         
         .theme-switch { width: 56px; height: 30px; background: var(--accent); border-radius: 15px; position: relative; padding: 4px; box-sizing: border-box; transition: background 0.3s; }
@@ -49,19 +62,20 @@
 
         .mute-btn { width: 40px; height: 40px; border: 1px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text); font-size: 1.2rem; }
 
-        #credits-btn { position: fixed; bottom: 20px; left: 20px; padding: 5px 10px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--text); width: auto; z-index: 3000; }
+        .bottom-links { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 3000; }
+        .bottom-links button { padding: 5px 10px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--text); width: auto; font-size: 0.85rem; }
 
         /* Modal Overlay */
-        #credits-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; line-height: 1.6; position: relative; }
-        .modal-content p { font-size: 0.9rem; margin: 10px 0; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; line-height: 1.6; position: relative; box-sizing: border-box; }
+        .modal-content p { font-size: 0.95rem; margin: 10px 0; }
         .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; }
 
         /* Writing Area */
-        #writing-area { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 60px 40px; box-sizing: border-box; }
+        #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 60px 40px; box-sizing: border-box; }
         #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
         
-        #visual-display { width: 100%; max-width: 750px; height: 85vh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 150px; }
+        #visual-display { width: 100%; max-width: 750px; height: 85dvh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 150px; }
         #visual-display::-webkit-scrollbar { width: 6px; }
         #visual-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
@@ -72,8 +86,21 @@
         #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,71,87,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
         .warning-glow { box-shadow: inset 0 0 80px rgba(255,71,87,0.4) !important; }
 
-        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: 1px solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); backdrop-filter: blur(10px); }
+        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: 1px solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); backdrop-filter: blur(10px); box-sizing: border-box; }
         #success-toolbar.visible { transform: translateY(0); }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .setup-box { padding: 25px 20px; }
+            h1 { font-size: 1.8rem; }
+            #writing-area { padding: 40px 20px; }
+            #visual-display { font-size: 1.1rem; height: 90dvh; }
+            #flash-char { font-size: 6rem; }
+            .floating-controls { top: 15px; right: 15px; gap: 10px; }
+            .bottom-links { bottom: 15px; left: 15px; flex-direction: column; }
+            #success-toolbar { flex-direction: column; gap: 10px; text-align: center; }
+            #toolbar-msg { margin-right: 0; }
+        }
     </style>
 </head>
 <body class="theme-night">
@@ -89,11 +116,23 @@
         </div>
     </div>
     
-    <button id="credits-btn" class="floating-btn" onclick="toggleCredits(true)">Music Credits</button>
+    <div class="bottom-links">
+        <button id="about-btn" class="floating-btn" onclick="toggleModal('about-modal', true)">About</button>
+        <button id="credits-btn" class="floating-btn" onclick="toggleModal('credits-modal', true)">Music Credits</button>
+    </div>
 
-    <div id="credits-modal" class="hidden">
+    <div id="about-modal" class="modal hidden">
         <div class="modal-content">
-            <button class="close-modal" onclick="toggleCredits(false)">&times;</button>
+            <button class="close-modal" onclick="toggleModal('about-modal', false)">&times;</button>
+            <h2 style="margin-top: 0;">Welcome to The Zone</h2>
+            <p>This tool is designed to bypass writer's block by forcing momentum. Set your timer, pick your punishment, and do not stop typing.</p>
+            <p style="opacity: 0.7; font-size: 0.85rem; margin-top: 20px;"><em>Inspired by The Most Dangerous Writing App. It was extreme. We needed a milder warning app with customizable consequences.</em></p>
+        </div>
+    </div>
+
+    <div id="credits-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleModal('credits-modal', false)">&times;</button>
             <h2 style="margin-top: 0;">Playlist Credits</h2>
             <p>Music by <a href="https://pixabay.com/users/monume-44679891/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=509496" target="_blank">Monume</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=509496" target="_blank">Pixabay</a></p>
             <p>Music by <a href="https://pixabay.com/users/delosound-46524562/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=466475" target="_blank">DELOSound</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=466475" target="_blank">Pixabay</a></p>
@@ -116,7 +155,7 @@
                     <option value="1">1 Min</option>
                     <option value="2.83">2:50 (Sprint)</option>
                     <option value="5">5 Mins</option>
-                    <option value="10" selected>10 Mins</option>
+                    <option value="10">10 Mins</option>
                     <option value="custom">Custom...</option>
                 </select>
                 <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1">
@@ -126,7 +165,7 @@
                 <label>Visual Mode:</label>
                 <select id="visual-mode">
                     <option value="normal">Normal</option>
-                    <option value="blur" selected>Hardcore (Blur Text)</option>
+                    <option value="blur">Hardcore (Blur Text)</option>
                 </select>
             </div>
 
@@ -134,15 +173,15 @@
                 <label>Consequence (Idle for 6s):</label>
                 <select id="danger-mode">
                     <option value="none">Safe (No pressure)</option>
-                    <option value="warning" selected>Warning Only (Red glow)</option>
-                    <option value="pause">Strict (Halts session, saves text)</option>
+                    <option value="warning">Warning Only (Red glow)</option>
+                    <option value="pause">Strict (Halts session)</option>
                     <option value="wipeout">Kamikaze (Deletes everything!)</option>
                 </select>
             </div>
 
             <div class="row-inline" style="margin-top: 10px;">
                 <label for="music-toggle">Play Lofi Playlist</label>
-                <input type="checkbox" id="music-toggle" checked> 
+                <input type="checkbox" id="music-toggle"> 
             </div>
             
             <button onclick="initSession()" style="margin-top: 10px; font-weight: bold; border-width: 2px;">START WRITING</button>
@@ -178,10 +217,9 @@
             'assets/music/audio3.mp3',
             'assets/music/audio4.mp3'
         ];
-        let currentTrackIndex = Math.floor(Math.random() * playlist.length); // Start at a random track
+        let currentTrackIndex = Math.floor(Math.random() * playlist.length); 
         const musicPlayer = document.getElementById('bg-music');
 
-        // Event listener to loop to the next track when current finishes
         musicPlayer.addEventListener('ended', () => {
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
             musicPlayer.src = playlist[currentTrackIndex];
@@ -196,6 +234,35 @@
         const bar = document.getElementById('progress-bar');
         const toolbar = document.getElementById('success-toolbar');
         const toolbarMsg = document.getElementById('toolbar-msg');
+
+        // Load preferences on start
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedPrefs = localStorage.getItem('theZonePrefs');
+            if (savedPrefs) {
+                const prefs = JSON.parse(savedPrefs);
+                document.getElementById('timer-select').value = prefs.timer || '5';
+                document.getElementById('visual-mode').value = prefs.visual || 'blur';
+                document.getElementById('danger-mode').value = prefs.danger || 'warning';
+                document.getElementById('music-toggle').checked = prefs.music !== false;
+                checkCustomTime();
+            } else {
+                // Defaults for first-time users
+                document.getElementById('timer-select').value = '5';
+                document.getElementById('visual-mode').value = 'blur';
+                document.getElementById('danger-mode').value = 'warning';
+                document.getElementById('music-toggle').checked = true;
+            }
+        });
+
+        function savePreferences() {
+            const prefs = {
+                timer: document.getElementById('timer-select').value,
+                visual: document.getElementById('visual-mode').value,
+                danger: document.getElementById('danger-mode').value,
+                music: document.getElementById('music-toggle').checked
+            };
+            localStorage.setItem('theZonePrefs', JSON.stringify(prefs));
+        }
 
         function toggleTheme() {
             const body = document.body;
@@ -217,8 +284,8 @@
             }
         }
 
-        function toggleCredits(show) {
-            const modal = document.getElementById('credits-modal');
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
             if (show) modal.classList.remove('hidden');
             else modal.classList.add('hidden');
         }
@@ -244,6 +311,8 @@
             const minutes = selectVal === 'custom' ? document.getElementById('custom-time').value : selectVal;
             if (!minutes || minutes <= 0) return alert("Please enter a valid time.");
 
+            savePreferences(); // Save user data here
+
             duration = parseFloat(minutes) * 60;
             timeLeft = duration;
             isSessionActive = true;
@@ -253,6 +322,9 @@
             bar.style.width = "0%";
             toolbar.classList.remove('visible');
             toolbarMsg.innerText = "Timer done. Keep writing, or save when ready.";
+            
+            // Hide bottom links during session for focus
+            document.querySelector('.bottom-links').style.display = 'none';
             
             if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
@@ -264,6 +336,8 @@
                     musicPlayer.volume = 0.5;
                     musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
                 }
+            } else {
+                musicPlayer.pause();
             }
 
             if (document.getElementById('visual-mode').value === 'blur') {
@@ -338,7 +412,6 @@
             vignette.classList.remove('warning-glow');
             display.classList.remove('hardcore');
             toolbar.classList.add('visible');
-            // Music continues playing
         }
 
         function killSession() {
@@ -347,7 +420,6 @@
             isSessionActive = false;
             input.disabled = true;
             vignette.classList.remove('warning-glow');
-            // Music continues playing
             
             input.value = "";
             display.innerText = "";
@@ -377,8 +449,9 @@
             showScreen('setup');
             toolbar.classList.remove('visible');
             toolbarMsg.style.color = "";
-            document.getElementById('credits-btn').classList.remove('hidden');
+            document.querySelector('.bottom-links').style.display = 'flex';
         }
     </script>
 </body>
 </html>
+```
