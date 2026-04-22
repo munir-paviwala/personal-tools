@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munir's Personal Tools Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --deep-indigo: #1a237e;
+            --marigold: #ffc107;
+            --burnt-orange: #bf360c;
+            --deep-magenta: #880e4f;
+            --vibrant-pink: #c2185b;
+            --peacock: #00bcd4;
+            --forest-green: #1b5e20;
+            --white-silk: #f1f1f1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-indigo);
+            /* Retro 90s dot grid pattern using Marigold */
+            background-image: radial-gradient(var(--marigold) 2px, transparent 2px);
+            background-size: 30px 30px;
+            color: var(--white-silk);
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* The Main 90s Container */
+        .hub-container {
+            background: var(--deep-magenta);
+            border: 8px solid var(--marigold);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 15px 15px 0px var(--peacock);
+            position: relative;
+        }
+
+        /* Classic 90s Marquee replacement */
+        .status-bar {
+            background: var(--marigold);
+            color: var(--deep-indigo);
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border-bottom: 4px solid var(--burnt-orange);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 4rem;
+            color: var(--marigold);
+            margin: 40px 0 20px 0;
+            text-shadow: 4px 4px var(--burnt-orange);
+            line-height: 1;
+            text-align: center;
+        }
+
+        .intro {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-left: 5px solid var(--peacock);
+        }
+
+        /* Directory List */
+        .tool-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .tool-link {
+            text-decoration: none;
+            background: var(--white-silk);
+            color: var(--deep-indigo);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border: 4px solid var(--deep-indigo);
+            box-shadow: 8px 8px 0px var(--forest-green);
+            transition: all 0.1s ease-in-out;
+            cursor: pointer;
+        }
+
+        .tool-link:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px var(--peacock);
+            background: var(--marigold);
+        }
+
+        .tool-link:active {
+            transform: translate(4px, 4px);
+            box-shadow: 4px 4px 0px var(--burnt-orange);
+        }
+
+        .tool-number {
+            font-family: 'VT323', monospace;
+            font-size: 3rem;
+            color: var(--burnt-orange);
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .tool-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .tool-desc {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: #333;
+        }
+
+        /* Web 1.0 Footer */
+        footer {
+            margin-top: 40px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: var(--marigold);
+            text-align: center;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hub-container">
+        <div class="status-bar">System Status: ONLINE // LOCAL ONLY</div>
+        
+        <h1>MUNIR'S PERSONAL TOOLS LIBRARY</h1>
+        
+        <p class="intro">
+            These are my tools for productivity and just daily stuff. Mostly privacy-focused since they run entirely in your browser. No servers, no data sharing. Just bright colors and getting things done.
+        </p>
+
+        <div class="tool-list">
+            <a href="dangerous-writer.html" class="tool-link">
+                <div class="tool-number">01</div>
+                <div class="tool-details">
+                    <span class="tool-title">The Most Dangerous Writing App</span>
+                    <span class="tool-desc">Keep typing or lose everything. A brutal productivity tool.</span>
+                </div>
+            </a>
+
+            <a href="metadata-eraser.html" class="tool-link">
+                <div class="tool-number">02</div>
+                <div class="tool-details">
+                    <span class="tool-title">Metadata Eraser</span>
+                    <span class="tool-desc">Offline, browser-based metadata cleaner. Strip digital footprints instantly.</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 // Built for personal utility
+    </footer>
+
+</body>
+</html>
