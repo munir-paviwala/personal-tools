@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,21 +27,33 @@
         .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
-        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 15px; align-items: center; width: 320px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 20px; align-items: center; width: 340px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; }
         body.theme-night .setup-box { background: rgba(255,255,255,0.02); }
 
-        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 10px 0; font-size: 2.2rem; text-align: center; }
-        .row { display: flex; flex-direction: column; gap: 5px; font-size: 0.95rem; width: 100%; align-items: flex-start; }
+        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 5px 0; font-size: 2.2rem; text-align: center; }
+        .row { display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; width: 100%; align-items: flex-start; position: relative; }
         
-        button, select, input[type="number"] { width: 100%; padding: 10px 16px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 8px; font-family: inherit; font-size: 1rem; transition: all 0.2s; outline: none; box-sizing: border-box; }
-        button:hover, select:hover, input[type="number"]:focus { background: var(--accent); color: var(--bg); }
+        button, input[type="number"] { width: 100%; padding: 12px 16px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 8px; font-family: inherit; font-size: 1rem; transition: all 0.2s; outline: none; box-sizing: border-box; }
+        button:hover, input[type="number"]:focus { background: var(--accent); color: var(--bg); }
         
+        /* Custom Select Styles */
+        .custom-select { position: relative; width: 100%; font-family: inherit; }
+        .select-selected { padding: 12px 16px; border: 1px solid var(--accent); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; user-select: none; font-size: 1rem; }
+        .select-selected:hover { background: rgba(0,0,0,0.03); }
+        body.theme-night .select-selected:hover { background: rgba(255,255,255,0.03); }
+        .select-selected::after { content: '▼'; font-size: 0.7rem; opacity: 0.6; transition: transform 0.2s; }
+        .custom-select.active .select-selected::after { transform: rotate(180deg); }
+        .select-items { position: absolute; top: 100%; left: 0; right: 0; z-index: 99; margin-top: 5px; background: var(--bg); border: 1px solid var(--accent); border-radius: 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: none; }
+        .custom-select.active .select-items { display: block; }
+        .select-items div { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--accent); transition: background 0.2s; }
+        .select-items div:last-child { border-bottom: none; }
+        .select-items div:hover { background: var(--accent); color: var(--bg); }
+
         .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; }
         input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.2); cursor: pointer; }
 
         /* Floating Toggles */
         .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
-        
         .floating-btn { opacity: 0.25; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
         .floating-btn:hover { opacity: 1; }
         
@@ -57,19 +70,28 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; line-height: 1.6; position: relative; box-sizing: border-box; }
         .modal-content p { font-size: 0.95rem; margin: 10px 0; }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; border: none !important; }
+        .close-modal:hover { background: transparent !important; color: var(--danger) !important; }
 
         /* Writing Area */
-        #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 60px 40px; box-sizing: border-box; }
+        #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0 40px; box-sizing: border-box; }
         #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
         
-        #visual-display { width: 100%; max-width: 750px; height: 85dvh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 150px; }
+        #visual-display { width: 100%; max-width: 750px; height: 100dvh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 150px; scroll-behavior: smooth; }
+        
+        /* The Top Padding Spacer */
+        #visual-display::before { content: ''; display: block; height: 30vh; width: 100%; }
+        
+        /* The Animated Cursor */
+        #visual-display.active::after { content: '█'; display: inline-block; width: 1ch; animation: blink 1s step-end infinite; vertical-align: bottom; margin-left: 2px; opacity: 0.8; color: var(--bar); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
         #visual-display::-webkit-scrollbar { width: 6px; }
         #visual-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
         .hardcore { filter: blur(8px); opacity: 0.8; }
         
-        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; font-weight: 300; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; opacity: 0.05; }
+        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; font-weight: 300; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; }
         
         #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,71,87,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
         .warning-glow { box-shadow: inset 0 0 80px rgba(255,71,87,0.4) !important; }
@@ -81,13 +103,12 @@
         @media (max-width: 600px) {
             .setup-box { padding: 25px 20px; }
             h1 { font-size: 1.8rem; }
-            #writing-area { padding: 40px 20px; }
-            #visual-display { font-size: 1.1rem; height: 90dvh; }
+            #writing-area { padding: 0 20px; }
+            #visual-display { font-size: 1.1rem; }
             #flash-char { font-size: 6rem; }
             .floating-controls { top: 15px; right: 15px; gap: 10px; }
             .bottom-links { bottom: 15px; left: 15px; flex-direction: column; }
             #success-toolbar { flex-direction: column; gap: 10px; text-align: center; }
-            #toolbar-msg { margin-right: 0; }
         }
     </style>
 </head>
@@ -106,7 +127,7 @@
     
     <div class="bottom-links">
         <button id="about-btn" class="floating-btn" onclick="toggleModal('about-modal', true)">About</button>
-        <button id="credits-btn" class="floating-btn" onclick="toggleModal('credits-modal', true)">Music Credits</button>
+        <button id="credits-btn" class="floating-btn" onclick="toggleModal('credits-modal', true)">Music</button>
     </div>
 
     <div id="about-modal" class="modal hidden">
@@ -122,10 +143,7 @@
         <div class="modal-content">
             <button class="close-modal" onclick="toggleModal('credits-modal', false)">&times;</button>
             <h2 style="margin-top: 0;">Playlist Credits</h2>
-            <p>Music by <a href="https://pixabay.com/users/monume-44679891/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=509496" target="_blank">Monume</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=509496" target="_blank">Pixabay</a></p>
-            <p>Music by <a href="https://pixabay.com/users/delosound-46524562/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=466475" target="_blank">DELOSound</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=466475" target="_blank">Pixabay</a></p>
-            <p>Music by <a href="https://pixabay.com/users/mondamusic-54713575/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=491719" target="_blank">MondaMusic</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=491719" target="_blank">Pixabay</a></p>
-            <p>Music by <a href="https://pixabay.com/users/mondamusic-54713575/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=512854" target="_blank">MondaMusic</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=512854" target="_blank">Pixabay</a></p>
+            <p>Music by <a href="#" target="_blank">Monume</a>, <a href="#" target="_blank">DELOSound</a>, and <a href="#" target="_blank">MondaMusic</a> from Pixabay.</p>
         </div>
     </div>
 
@@ -139,32 +157,44 @@
             
             <div class="row">
                 <label>Duration:</label>
-                <select id="timer-select" onchange="checkCustomTime()">
-                    <option value="1">1 Min</option>
-                    <option value="2.83">2:50 (Sprint)</option>
-                    <option value="5">5 Mins</option>
-                    <option value="10">10 Mins</option>
-                    <option value="custom">Custom...</option>
-                </select>
-                <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1">
+                <div class="custom-select" data-target="timer-select">
+                    <div class="select-selected">5 Mins</div>
+                    <div class="select-items">
+                        <div data-value="1">1 Min</div>
+                        <div data-value="2.83">2:50 (Sprint)</div>
+                        <div data-value="5">5 Mins</div>
+                        <div data-value="10">10 Mins</div>
+                        <div data-value="custom">Custom...</div>
+                    </div>
+                </div>
+                <input type="hidden" id="timer-select" value="5">
+                <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1" style="margin-top: 5px;">
             </div>
             
             <div class="row">
                 <label>Visual Mode:</label>
-                <select id="visual-mode">
-                    <option value="normal">Normal</option>
-                    <option value="blur">Hardcore (Blur Text)</option>
-                </select>
+                <div class="custom-select" data-target="visual-mode">
+                    <div class="select-selected">Hardcore (Blur Text)</div>
+                    <div class="select-items">
+                        <div data-value="normal">Normal</div>
+                        <div data-value="blur">Hardcore (Blur Text)</div>
+                    </div>
+                </div>
+                <input type="hidden" id="visual-mode" value="blur">
             </div>
 
             <div class="row">
                 <label>Consequence (Idle for 6s):</label>
-                <select id="danger-mode">
-                    <option value="none">Safe (No pressure)</option>
-                    <option value="warning">Warning Only (Red glow)</option>
-                    <option value="pause">Strict (Halts session)</option>
-                    <option value="wipeout">Kamikaze (Deletes everything!)</option>
-                </select>
+                <div class="custom-select" data-target="danger-mode">
+                    <div class="select-selected">Warning Only (Red glow)</div>
+                    <div class="select-items">
+                        <div data-value="none">Safe (No pressure)</div>
+                        <div data-value="warning">Warning Only (Red glow)</div>
+                        <div data-value="pause">Strict (Halts session)</div>
+                        <div data-value="wipeout">Kamikaze (Deletes everything!)</div>
+                    </div>
+                </div>
+                <input type="hidden" id="danger-mode" value="warning">
             </div>
 
             <div class="row-inline" style="margin-top: 10px;">
@@ -183,7 +213,7 @@
     </div>
 
     <div id="success-toolbar">
-        <span id="toolbar-msg" style="opacity: 0.7; margin-right: 15px; font-size: 0.9rem;">Timer done. Keep writing, or save when ready.</span>
+        <span id="toolbar-msg" style="opacity: 0.7; font-size: 0.9rem;">Timer done. Keep writing, or save when ready.</span>
         <button id="save-btn" onclick="saveWork()" style="width: auto;">Save (.md)</button>
         <button onclick="returnToSetup()" style="width: auto;">New Session</button>
     </div>
@@ -198,7 +228,6 @@
         let lastInputTime = Date.now();
         let isSessionActive = false; 
         
-        // Playlist Configuration
         const playlist = [
             'assets/music/audio1.mp3',
             'assets/music/audio2.mp3',
@@ -223,24 +252,76 @@
         const toolbar = document.getElementById('success-toolbar');
         const toolbarMsg = document.getElementById('toolbar-msg');
 
-        // Load preferences on start
         document.addEventListener('DOMContentLoaded', () => {
+            initCustomSelects();
+            
             const savedPrefs = localStorage.getItem('theZonePrefs');
             if (savedPrefs) {
                 const prefs = JSON.parse(savedPrefs);
-                document.getElementById('timer-select').value = prefs.timer || '5';
-                document.getElementById('visual-mode').value = prefs.visual || 'blur';
-                document.getElementById('danger-mode').value = prefs.danger || 'warning';
+                setCustomSelectValue('timer-select', prefs.timer || '5');
+                setCustomSelectValue('visual-mode', prefs.visual || 'blur');
+                setCustomSelectValue('danger-mode', prefs.danger || 'warning');
                 document.getElementById('music-toggle').checked = prefs.music !== false;
                 checkCustomTime();
             } else {
-                // Defaults for first-time users
-                document.getElementById('timer-select').value = '5';
-                document.getElementById('visual-mode').value = 'blur';
-                document.getElementById('danger-mode').value = 'warning';
+                setCustomSelectValue('timer-select', '5');
+                setCustomSelectValue('visual-mode', 'blur');
+                setCustomSelectValue('danger-mode', 'warning');
                 document.getElementById('music-toggle').checked = true;
             }
         });
+
+        function initCustomSelects() {
+            document.querySelectorAll('.custom-select').forEach(customSelect => {
+                const selected = customSelect.querySelector('.select-selected');
+                const itemsList = customSelect.querySelector('.select-items');
+                const hiddenInput = document.getElementById(customSelect.dataset.target);
+
+                selected.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.custom-select').forEach(el => {
+                        if (el !== customSelect) el.classList.remove('active');
+                    });
+                    customSelect.classList.toggle('active');
+                });
+
+                itemsList.querySelectorAll('div').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selected.innerText = item.innerText;
+                        hiddenInput.value = item.dataset.value;
+                        customSelect.classList.remove('active');
+                        
+                        if (hiddenInput.id === 'timer-select') checkCustomTime();
+                    });
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active'));
+            });
+        }
+
+        function setCustomSelectValue(targetId, value) {
+            const hiddenInput = document.getElementById(targetId);
+            const customSelect = document.querySelector(`.custom-select[data-target="${targetId}"]`);
+            if (!customSelect || !hiddenInput) return;
+            
+            const targetItem = customSelect.querySelector(`.select-items div[data-value="${value}"]`);
+            if (targetItem) {
+                customSelect.querySelector('.select-selected').innerText = targetItem.innerText;
+                hiddenInput.value = value;
+            }
+        }
+
+        function checkCustomTime() {
+            const val = document.getElementById('timer-select').value;
+            const customInput = document.getElementById('custom-time');
+            if (val === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
 
         function savePreferences() {
             const prefs = {
@@ -278,17 +359,6 @@
             else modal.classList.add('hidden');
         }
 
-        function checkCustomTime() {
-            const select = document.getElementById('timer-select');
-            const customInput = document.getElementById('custom-time');
-            if (select.value === 'custom') {
-                customInput.classList.remove('hidden');
-                customInput.focus();
-            } else {
-                customInput.classList.add('hidden');
-            }
-        }
-
         function showScreen(screenKey) {
             Object.values(screens).forEach(s => s.classList.add('hidden'));
             if (screenKey) screens[screenKey].classList.remove('hidden');
@@ -299,7 +369,7 @@
             const minutes = selectVal === 'custom' ? document.getElementById('custom-time').value : selectVal;
             if (!minutes || minutes <= 0) return alert("Please enter a valid time.");
 
-            savePreferences(); // Save user data here
+            savePreferences(); 
 
             duration = parseFloat(minutes) * 60;
             timeLeft = duration;
@@ -309,9 +379,9 @@
             display.innerText = "";
             bar.style.width = "0%";
             toolbar.classList.remove('visible');
+            display.classList.add('active'); // Activates cursor
             toolbarMsg.innerText = "Timer done. Keep writing, or save when ready.";
             
-            // Hide bottom links during session for focus
             document.querySelector('.bottom-links').style.display = 'none';
             
             if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
@@ -378,6 +448,21 @@
             }, 100);
         }
 
+        // Force cursor to the end to match braindump philosophy
+        function forceCursorToEnd() {
+            if(isSessionActive) {
+                input.selectionStart = input.selectionEnd = input.value.length;
+            }
+        }
+        
+        input.addEventListener('click', forceCursorToEnd);
+        input.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault(); // Disable arrow keys
+            }
+            forceCursorToEnd();
+        });
+
         input.addEventListener('input', () => {
             lastInputTime = Date.now();
             display.innerText = input.value;
@@ -399,6 +484,7 @@
             isSessionActive = false; 
             vignette.classList.remove('warning-glow');
             display.classList.remove('hardcore');
+            display.classList.remove('active'); // Removes cursor
             toolbar.classList.add('visible');
         }
 
@@ -408,6 +494,7 @@
             isSessionActive = false;
             input.disabled = true;
             vignette.classList.remove('warning-glow');
+            display.classList.remove('active');
             
             input.value = "";
             display.innerText = "";
