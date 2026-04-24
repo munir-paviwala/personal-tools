@@ -178,6 +178,77 @@
 
         <a href="index.html" class="back-btn">&lt;&lt; RETURN TO HUB</a>
     </div>
+<script>
+    const textarea = document.querySelector('.writing-zone');
+    const wordCountDisplay = document.getElementById('word-count');
+    const timerDisplay = document.getElementById('timer');
+    
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    
+    let typingTimer = null;
+    const DANGER_DELAY = 5000; // 5 seconds before it burns
+    let isTypingStarted = false;
 
+    // Helper to format the timer
+    function formatTime(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `TIME: ${m}:${s}`;
+    }
+
+    // Start the session clock
+    function startSessionTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            timerDisplay.textContent = formatTime(secondsElapsed);
+        }, 1000);
+    }
+
+    // The brutal wipe function
+    function triggerFailure() {
+        textarea.value = '';
+        textarea.placeholder = "YOU STOPPED. THE FIRE TOOK IT. START AGAIN.";
+        textarea.classList.remove('warning');
+        wordCountDisplay.textContent = 'WORDS: 0';
+        
+        clearInterval(timerInterval);
+        timerInterval = null;
+        secondsElapsed = 0;
+        timerDisplay.textContent = formatTime(0);
+        isTypingStarted = false;
+    }
+
+    // Listen for keystrokes
+    textarea.addEventListener('input', () => {
+        if (!isTypingStarted) {
+            isTypingStarted = true;
+            startSessionTimer();
+        }
+
+        // Tally words
+        const text = textarea.value.trim();
+        const words = text === '' ? 0 : text.split(/\s+/).length;
+        wordCountDisplay.textContent = `WORDS: ${words}`;
+
+        // Reset the danger states
+        textarea.classList.remove('warning');
+        clearTimeout(typingTimer);
+
+        // Set the trap
+        if (text.length > 0) {
+            // Visual panic at 3 seconds
+            setTimeout(() => {
+                if(isTypingStarted) textarea.classList.add('warning');
+            }, DANGER_DELAY - 2000);
+
+            // Complete wipe at 5 seconds
+            typingTimer = setTimeout(() => {
+                triggerFailure();
+            }, DANGER_DELAY);
+        }
+    });
+</script>
 </body>
 </html>
