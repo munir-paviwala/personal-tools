@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Indian Writer // Munir's Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --danger: #d50000;
+            --transition-speed: 0.5s;
+        }
+
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Space Grotesk', sans-serif; 
+            overflow: hidden; 
+            transition: background-color var(--transition-speed), color var(--transition-speed); 
+        }
+
+        /* Subtle dot pattern layer to prevent clashing */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
+            background-size: 35px 35px;
+            opacity: 0.15; /* Softened from the original */
+            transition: opacity var(--transition-speed);
+        }
+        
+        a { color: var(--bar); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: transparent; z-index: 1000; }
+        #progress-bar { width: 0%; height: 100%; background: var(--bar); transition: width 1s linear, background-color var(--transition-speed); opacity: 0.9; }
+
+        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+        /* Setup Box */
+        .setup-box { 
+            padding: 40px; 
+            border: 6px solid var(--accent); 
+            background: var(--box-bg); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            align-items: center; 
+            width: 380px; 
+            max-width: 90%; 
+            box-shadow: 12px 12px 0px var(--bar); 
+            box-sizing: border-box; 
+            backdrop-filter: blur(10px);
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed);
+        }
+
+        h1 { font-family: 'VT323', monospace; font-weight: normal; letter-spacing: 1px; margin: 0 0 5px 0; font-size: 3.5rem; text-align: center; text-shadow: 3px 3px var(--bar); line-height: 1; transition: text-shadow var(--transition-speed); }
+        .row { display: flex; flex-direction: column; gap: 8px; font-size: 1rem; width: 100%; align-items: flex-start; position: relative; font-weight: bold; }
+        
+        button, input[type="number"] { 
+            width: 100%; 
+            padding: 12px 16px; 
+            background: var(--bg); 
+            border: 3px solid var(--accent); 
+            color: var(--text); 
+            cursor: pointer; 
+            font-family: 'VT323', monospace; 
+            font-size: 1.5rem; 
+            text-transform: uppercase;
+            transition: all 0.2s, background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed); 
+            outline: none; 
+            box-sizing: border-box; 
+            box-shadow: 4px 4px 0px var(--bar);
+        }
+        button:hover, input[type="number"]:focus { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--bar); }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--bar); }
+        
+        /* Custom Select Styles */
+        .custom-select { position: relative; width: 100%; font-family: 'Space Grotesk', sans-serif; font-size: 1rem; }
+        .select-selected { padding: 12px 16px; border: 3px solid var(--accent); background: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s, border-color var(--transition-speed), background-color var(--transition-speed); user-select: none; font-weight: bold; }
+        .select-selected:hover { background: var(--accent); color: var(--bg); }
+        .select-selected::after { content: '▼'; font-size: 0.7rem; opacity: 0.8; transition: transform 0.2s; }
+        .custom-select.active .select-selected::after { transform: rotate(180deg); }
+        .select-items { position: absolute; top: 100%; left: 0; right: 0; z-index: 99; margin-top: 5px; background: var(--bg); border: 3px solid var(--accent); max-height: 200px; overflow-y: auto; box-shadow: 8px 8px 0px var(--bar); display: none; transition: border-color var(--transition-speed), box-shadow var(--transition-speed); }
+        .custom-select.active .select-items { display: block; }
+        .select-items div { padding: 12px 16px; cursor: pointer; border-bottom: 2px solid var(--accent); transition: background 0.2s, border-color var(--transition-speed); font-weight: bold; }
+        .select-items div:last-child { border-bottom: none; }
+        .select-items div:hover { background: var(--accent); color: var(--bg); }
+
+        .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; font-weight: bold; }
+        input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.5); cursor: pointer; border: 2px solid var(--accent); transition: accent-color var(--transition-speed); }
+
+        /* Floating Toggles */
+        .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
+        .floating-btn { opacity: 0.8; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
+        .floating-btn:hover { opacity: 1; }
+        
+        .theme-switch { width: 64px; height: 34px; background: var(--accent); border: 2px solid var(--bar); position: relative; padding: 0; box-sizing: border-box; transition: background var(--transition-speed), border-color var(--transition-speed); box-shadow: 2px 2px 0px var(--bg); border-radius: 17px; }
+        .theme-switch::after { content: "✨"; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), background-color var(--transition-speed), border-color var(--transition-speed); border: 2px solid var(--bar); box-sizing: border-box; }
+        body.is-light .theme-switch::after { content: "🍂"; transform: translateX(30px); }
+
+        .mute-btn { width: 44px; height: 44px; border: 3px solid var(--accent); background: var(--bg); color: var(--text); font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0px var(--bar); border-radius: 50%; transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed); }
+
+        .bottom-links { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 3000; }
+        .bottom-links button { padding: 8px 12px; font-size: 1.2rem; }
+
+        /* Modal Overlay */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--bg); border: 6px solid var(--accent); padding: 30px; max-width: 450px; width: 90%; text-align: left; line-height: 1.6; position: relative; box-sizing: border-box; box-shadow: 12px 12px 0px var(--bar); transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed); }
+        .modal-content p { font-size: 1rem; margin: 10px 0; font-weight: bold; }
+        .modal-content h2 { font-family: 'VT323', monospace; font-size: 2.5rem; color: var(--bar); margin-top: 0; transition: color var(--transition-speed); }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none !important; box-shadow: none !important; font-size: 2rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; transition: color var(--transition-speed); }
+        .close-modal:hover { background: transparent !important; color: var(--danger) !important; transform: scale(1.1); }
+
+        /* Writing Area */
+        #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0 40px; box-sizing: border-box; }
+        #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
+        
+        #visual-display { width: 100%; max-width: 850px; height: 100dvh; font-family: 'VT323', monospace; font-size: 1.8rem; line-height: 1.4; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 40vh; scroll-behavior: smooth; }
+        
+        /* The Top Padding Spacer */
+        #visual-display::before { content: ''; display: block; height: 30vh; width: 100%; }
+        
+        /* The Animated Cursor */
+        #visual-display.active::after { content: '█'; display: inline-block; width: 1ch; animation: blink 1s step-end infinite; vertical-align: bottom; margin-left: 2px; opacity: 0.8; color: var(--bar); transition: color var(--transition-speed); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        #visual-display::-webkit-scrollbar { width: 10px; }
+        #visual-display::-webkit-scrollbar-thumb { background: var(--accent); border: 2px solid var(--bg); transition: background-color var(--transition-speed), border-color var(--transition-speed); }
+        
+        .hardcore { filter: blur(8px); opacity: 0.8; }
+        
+        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'VT323', monospace; font-size: 18rem; font-weight: 300; color: var(--bar); pointer-events: none; opacity: 0; transition: opacity 0.1s, color var(--transition-speed); z-index: 1; }
+        
+        #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(213,0,0,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
+        .warning-glow { box-shadow: inset 0 0 120px rgba(213,0,0,0.6) !important; }
+
+        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: 4px solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1), background-color var(--transition-speed), border-color var(--transition-speed); transform: translateY(100%); backdrop-filter: blur(10px); box-sizing: border-box; }
+        #success-toolbar.visible { transform: translateY(0); }
+        #toolbar-msg { font-family: 'VT323', monospace; font-size: 1.5rem; color: var(--text); transition: color var(--transition-speed); }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .setup-box { padding: 25px 20px; }
+            h1 { font-size: 2.5rem; }
+            #writing-area { padding: 0 20px; }
+            #visual-display { font-size: 1.5rem; }
+            #flash-char { font-size: 8rem; }
+            .floating-controls { top: 15px; right: 15px; gap: 10px; }
+            .bottom-links { bottom: 15px; left: 15px; flex-direction: column; }
+            #success-toolbar { flex-direction: column; gap: 10px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music"></audio>
+
+    <div class="floating-controls">
+        <div id="theme-wrapper" class="floating-btn" onclick="toggleTheme()" title="Toggle Theme">
+            <div class="theme-switch"></div>
+        </div>
+        <div id="mute-wrapper" class="floating-btn" onclick="toggleMute()" title="Mute/Unmute Lofi">
+            <div class="mute-btn" id="mute-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-links">
+        <button id="about-btn" class="floating-btn" onclick="toggleModal('about-modal', true)">About</button>
+        <button id="credits-btn" class="floating-btn" onclick="toggleModal('credits-modal', true)">Music</button>
+    </div>
+
+    <div id="about-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleModal('about-modal', false)">&times;</button>
+            <h2>Welcome to The Indian Writer</h2>
+            <p>This tool is designed to bypass writer's block by forcing momentum, styled with beautiful cycling Indian maximalist & minimalist palettes.</p>
+            <p>Set your timer, pick your consequence, and immerse in the vibes. Do not stop typing.</p>
+            <p style="opacity: 0.8; font-size: 0.9rem; margin-top: 20px;"><em>Inspired by The Zone & The Most Dangerous Writing App.</em></p>
+        </div>
+    </div>
+
+    <div id="credits-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleModal('credits-modal', false)">&times;</button>
+            <h2>Vibe Credits</h2>
+            <p>Music by <a href="#" target="_blank">Monume</a>, <a href="#" target="_blank">DELOSound</a>, and <a href="#" target="_blank">MondaMusic</a> from Pixabay.</p>
+        </div>
+    </div>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="vignette"></div>
+    <div id="flash-char"></div>
+
+    <div id="setup-screen" class="screen">
+        <div class="setup-box">
+            <h1>THE INDIAN WRITER</h1>
+            
+            <div class="row">
+                <label>Duration:</label>
+                <div class="custom-select" data-target="timer-select">
+                    <div class="select-selected">5 Mins</div>
+                    <div class="select-items">
+                        <div data-value="1">1 Min</div>
+                        <div data-value="2.83">2:50 (Sprint)</div>
+                        <div data-value="5">5 Mins</div>
+                        <div data-value="10">10 Mins</div>
+                        <div data-value="custom">Custom...</div>
+                    </div>
+                </div>
+                <input type="hidden" id="timer-select" value="5">
+                <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1" style="margin-top: 5px;">
+            </div>
+            
+            <div class="row">
+                <label>Visual Mode:</label>
+                <div class="custom-select" data-target="visual-mode">
+                    <div class="select-selected">Hardcore (Blur Text)</div>
+                    <div class="select-items">
+                        <div data-value="normal">Normal</div>
+                        <div data-value="blur">Hardcore (Blur Text)</div>
+                    </div>
+                </div>
+                <input type="hidden" id="visual-mode" value="blur">
+            </div>
+
+            <div class="row">
+                <label>Consequence (Idle for 6s):</label>
+                <div class="custom-select" data-target="danger-mode">
+                    <div class="select-selected">Warning Only (Red glow)</div>
+                    <div class="select-items">
+                        <div data-value="none">Safe (No pressure)</div>
+                        <div data-value="warning">Warning Only (Red glow)</div>
+                        <div data-value="pause">Strict (Halts session)</div>
+                        <div data-value="wipeout">Kamikaze (Deletes everything!)</div>
+                    </div>
+                </div>
+                <input type="hidden" id="danger-mode" value="warning">
+            </div>
+
+            <div class="row-inline" style="margin-top: 10px;">
+                <label for="music-toggle">Play Lofi Playlist</label>
+                <input type="checkbox" id="music-toggle"> 
+            </div>
+            
+            <button onclick="initSession()" style="margin-top: 15px;">START WRITING</button>
+        </div>
+    </div>
+
+    <div id="fail-screen" class="screen hidden">
+        <h1 style="color: var(--danger); font-size: 5rem; text-shadow: none;">WIPEOUT.</h1>
+        <p style="opacity: 0.9; margin-bottom: 30px; font-weight: bold; font-size: 1.5rem;">The fire took it. Take a breath and try again.</p>
+        <button onclick="returnToSetup()" style="width: auto;">Restart</button>
+    </div>
+
+    <div id="success-toolbar">
+        <span id="toolbar-msg">Timer done. Keep writing, or save when ready.</span>
+        <button id="save-btn" onclick="saveWork()" style="width: auto;">Save (.md)</button>
+        <button onclick="returnToSetup()" style="width: auto;">New Session</button>
+    </div>
+
+    <div id="writing-area">
+        <textarea id="real-input" spellcheck="false" autocomplete="off" disabled></textarea>
+        <div id="visual-display"></div>
+    </div>
+
+    <script>
+        /* THEME LOGIC */
+        const palettes = {
+            dark: [
+                { bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(49,27,146,0.95)' }, // Indigo / Maximalist
+                { bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', toolbarBg: 'rgba(26,0,24,0.95)' }, // Gulaabi Midnight
+                { bg: '#004d40', text: '#fff59d', accent: '#ff7043', bar: '#26a69a', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(0,77,64,0.95)' }  // Morpinch Forest
+            ],
+            light: [
+                { bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(250,248,245,0.95)' }, // Pistachio Minimalist
+                { bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)' }, // Morpinch Sea
+                { bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(252,228,236,0.95)' }  // Gulaabi Rose
+            ]
+        };
+
+        let currentMode = 'dark';
+        let currentIndex = 0;
+
+        function applyTheme(mode, index) {
+            const theme = palettes[mode][index];
+            const root = document.documentElement;
+            root.style.setProperty('--bg', theme.bg);
+            root.style.setProperty('--text', theme.text);
+            root.style.setProperty('--accent', theme.accent);
+            root.style.setProperty('--bar', theme.bar);
+            root.style.setProperty('--box-bg', theme.boxBg);
+            root.style.setProperty('--toolbar-bg', theme.toolbarBg);
+
+            if (mode === 'light') {
+                document.body.classList.add('is-light');
+            } else {
+                document.body.classList.remove('is-light');
+            }
+        }
+
+        function toggleTheme() {
+            // If toggling to the opposite mode, we increment the index for that mode
+            // to cycle through the color palettes.
+            if (currentMode === 'dark') {
+                currentMode = 'light';
+                // Move to next light index (unless it's the first time)
+                currentIndex = (currentIndex + 1) % palettes.light.length;
+            } else {
+                currentMode = 'dark';
+                currentIndex = (currentIndex + 1) % palettes.dark.length;
+            }
+            applyTheme(currentMode, currentIndex);
+            savePreferences();
+        }
+
+        /* TIMER AND MECHANICS */
+        let duration, timeLeft, clock, dangerTimer;
+        let lastInputTime = Date.now();
+        let isSessionActive = false; 
+        
+        const playlist = [
+            'assets/music/audio1.mp3',
+            'assets/music/audio2.mp3',
+            'assets/music/audio3.mp3',
+            'assets/music/audio4.mp3'
+        ];
+        let currentTrackIndex = Math.floor(Math.random() * playlist.length); 
+        const musicPlayer = document.getElementById('bg-music');
+
+        musicPlayer.addEventListener('ended', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            musicPlayer.src = playlist[currentTrackIndex];
+            musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+        });
+
+        const screens = { setup: document.getElementById('setup-screen'), fail: document.getElementById('fail-screen') };
+        const input = document.getElementById('real-input');
+        const display = document.getElementById('visual-display');
+        const flash = document.getElementById('flash-char');
+        const vignette = document.getElementById('vignette');
+        const bar = document.getElementById('progress-bar');
+        const toolbar = document.getElementById('success-toolbar');
+        const toolbarMsg = document.getElementById('toolbar-msg');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCustomSelects();
+            
+            const savedPrefs = localStorage.getItem('theIndianWriterPrefs');
+            if (savedPrefs) {
+                const prefs = JSON.parse(savedPrefs);
+                setCustomSelectValue('timer-select', prefs.timer || '5');
+                setCustomSelectValue('visual-mode', prefs.visual || 'blur');
+                setCustomSelectValue('danger-mode', prefs.danger || 'warning');
+                document.getElementById('music-toggle').checked = prefs.music !== false;
+                
+                currentMode = prefs.themeMode || 'dark';
+                currentIndex = prefs.themeIndex || 0;
+            } else {
+                setCustomSelectValue('timer-select', '5');
+                setCustomSelectValue('visual-mode', 'blur');
+                setCustomSelectValue('danger-mode', 'warning');
+                document.getElementById('music-toggle').checked = true;
+            }
+            applyTheme(currentMode, currentIndex);
+            checkCustomTime();
+        });
+
+        function initCustomSelects() {
+            document.querySelectorAll('.custom-select').forEach(customSelect => {
+                const selected = customSelect.querySelector('.select-selected');
+                const itemsList = customSelect.querySelector('.select-items');
+                const hiddenInput = document.getElementById(customSelect.dataset.target);
+
+                selected.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.custom-select').forEach(el => {
+                        if (el !== customSelect) el.classList.remove('active');
+                    });
+                    customSelect.classList.toggle('active');
+                });
+
+                itemsList.querySelectorAll('div').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selected.innerText = item.innerText;
+                        hiddenInput.value = item.dataset.value;
+                        customSelect.classList.remove('active');
+                        
+                        if (hiddenInput.id === 'timer-select') checkCustomTime();
+                    });
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active'));
+            });
+        }
+
+        function setCustomSelectValue(targetId, value) {
+            const hiddenInput = document.getElementById(targetId);
+            const customSelect = document.querySelector(`.custom-select[data-target="${targetId}"]`);
+            if (!customSelect || !hiddenInput) return;
+            
+            const targetItem = customSelect.querySelector(`.select-items div[data-value="${value}"]`);
+            if (targetItem) {
+                customSelect.querySelector('.select-selected').innerText = targetItem.innerText;
+                hiddenInput.value = value;
+            }
+        }
+
+        function checkCustomTime() {
+            const val = document.getElementById('timer-select').value;
+            const customInput = document.getElementById('custom-time');
+            if (val === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function savePreferences() {
+            const prefs = {
+                timer: document.getElementById('timer-select').value,
+                visual: document.getElementById('visual-mode').value,
+                danger: document.getElementById('danger-mode').value,
+                music: document.getElementById('music-toggle').checked,
+                themeMode: currentMode,
+                themeIndex: currentIndex
+            };
+            localStorage.setItem('theIndianWriterPrefs', JSON.stringify(prefs));
+        }
+
+        function toggleMute() {
+            const icon = document.getElementById('mute-icon');
+            const volUpSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+            const volOffSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
+            
+            if (musicPlayer.muted) {
+                musicPlayer.muted = false;
+                icon.innerHTML = volUpSVG;
+            } else {
+                musicPlayer.muted = true;
+                icon.innerHTML = volOffSVG;
+            }
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function showScreen(screenKey) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            if (screenKey) screens[screenKey].classList.remove('hidden');
+        }
+
+        function initSession() {
+            const selectVal = document.getElementById('timer-select').value;
+            const minutes = selectVal === 'custom' ? document.getElementById('custom-time').value : selectVal;
+            if (!minutes || minutes <= 0) return alert("Please enter a valid time.");
+
+            savePreferences(); 
+
+            duration = parseFloat(minutes) * 60;
+            timeLeft = duration;
+            isSessionActive = true;
+            
+            input.value = "";
+            display.innerText = "";
+            bar.style.width = "0%";
+            toolbar.classList.remove('visible');
+            display.classList.add('active'); // Activates cursor
+            toolbarMsg.innerText = "Timer done. Keep writing, or save when ready.";
+            
+            document.querySelector('.bottom-links').style.display = 'none';
+            
+            if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+            
+            if (document.getElementById('music-toggle').checked) {
+                if (!musicPlayer.src || musicPlayer.paused) {
+                    musicPlayer.src = playlist[currentTrackIndex];
+                    musicPlayer.volume = 0.5;
+                    musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+                }
+            } else {
+                musicPlayer.pause();
+            }
+
+            if (document.getElementById('visual-mode').value === 'blur') {
+                display.classList.add('hardcore');
+            } else {
+                display.classList.remove('hardcore');
+            }
+
+            showScreen(null);
+            input.disabled = false;
+            input.focus();
+            
+            lastInputTime = Date.now();
+            clock = setInterval(tick, 1000);
+            dangerLoop();
+        }
+
+        function tick() {
+            timeLeft--;
+            const percent = ((duration - timeLeft) / duration) * 100;
+            bar.style.width = percent + "%";
+            
+            if (timeLeft <= 0) endTimerPhase();
+        }
+
+        function dangerLoop() {
+            dangerTimer = setInterval(() => {
+                if (!isSessionActive) return;
+                
+                const dangerMode = document.getElementById('danger-mode').value;
+                if (dangerMode === 'none') return; 
+
+                const idleTime = Date.now() - lastInputTime;
+                
+                if (idleTime > 2000) { 
+                    vignette.classList.add('warning-glow');
+                } else {
+                    vignette.classList.remove('warning-glow');
+                }
+
+                if (idleTime > 6000) {
+                    if (dangerMode === 'pause') {
+                        toolbarMsg.innerText = "Session halted due to inactivity. Save your work.";
+                        toolbarMsg.style.color = "var(--danger)";
+                        endTimerPhase();
+                    } else if (dangerMode === 'wipeout') {
+                        killSession(); 
+                    }
+                }
+            }, 100);
+        }
+
+        // Force cursor to the end to match braindump philosophy
+        function forceCursorToEnd() {
+            if(isSessionActive) {
+                input.selectionStart = input.selectionEnd = input.value.length;
+            }
+        }
+        
+        input.addEventListener('click', forceCursorToEnd);
+        input.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault(); // Disable arrow keys
+            }
+            forceCursorToEnd();
+        });
+
+        input.addEventListener('input', () => {
+            lastInputTime = Date.now();
+            display.innerText = input.value;
+            display.scrollTop = display.scrollHeight;
+
+            if (isSessionActive && document.getElementById('visual-mode').value === 'blur') {
+                const lastChar = input.value.slice(-1);
+                if (lastChar && lastChar.trim() !== '') {
+                    flash.innerText = lastChar;
+                    flash.style.opacity = 0.4;
+                    setTimeout(() => flash.style.opacity = 0, 150);
+                }
+            }
+        });
+
+        function endTimerPhase() {
+            clearInterval(clock);
+            clearInterval(dangerTimer);
+            isSessionActive = false; 
+            vignette.classList.remove('warning-glow');
+            display.classList.remove('hardcore');
+            display.classList.remove('active'); // Removes cursor
+            toolbar.classList.add('visible');
+        }
+
+        function killSession() {
+            clearInterval(clock);
+            clearInterval(dangerTimer);
+            isSessionActive = false;
+            input.disabled = true;
+            vignette.classList.remove('warning-glow');
+            display.classList.remove('active');
+            
+            input.value = "";
+            display.innerText = "";
+            showScreen('fail');
+        }
+
+        function saveWork() {
+            const content = input.value;
+            if (!content) return;
+
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `IndianWriter_${new Date().toISOString().split('T')[0]}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.innerText = "✓ Saved";
+            setTimeout(() => saveBtn.innerText = "Save (.md)", 2000);
+        }
+
+        function returnToSetup() {
+            showScreen('setup');
+            toolbar.classList.remove('visible');
+            toolbarMsg.style.color = "var(--text)";
+            document.querySelector('.bottom-links').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
