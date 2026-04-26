@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Zone & The Indian Writer</title>
+    <title>Munir's Writing App</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=VT323&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -143,6 +143,11 @@
         .modal-content h2 { font-family: var(--font-heading); font-size: 2rem; color: var(--text); margin-top: 0; }
         .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none !important; box-shadow: none !important; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; }
         .close-modal:hover { background: transparent !important; color: var(--danger) !important; }
+        
+        /* Floating Theme Selector Tweaks */
+        .floating-theme-selector { width: 220px; opacity: 0.4; transition: opacity 0.3s; }
+        .floating-theme-selector:hover, .floating-theme-selector.active { opacity: 1; }
+        .floating-theme-selector .select-items { max-height: 400px; } /* Gives more room for all 8 themes */
 
         /* Writing Area */
         #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0 40px; box-sizing: border-box; }
@@ -183,6 +188,12 @@
     <audio id="bg-music"></audio>
 
     <div class="floating-controls">
+        <div class="custom-select floating-theme-selector" id="theme-selector" data-target="theme-select">
+            <div class="select-selected" id="theme-display">Sleek Midnight</div>
+            <div class="select-items" id="theme-list">
+                </div>
+        </div>
+        <input type="hidden" id="theme-select" value="zone-night">
         <div id="mute-wrapper" class="floating-btn" onclick="toggleMute()">
             <div class="mute-btn" id="mute-icon">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
@@ -218,17 +229,7 @@
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
-            <h1 id="main-title">THE WRITER</h1>
-            
-            <div class="row">
-                <label>Theme Palette:</label>
-                <div class="custom-select" id="theme-selector" data-target="theme-select">
-                    <div class="select-selected" id="theme-display">The Zone (Night)</div>
-                    <div class="select-items" id="theme-list">
-                        </div>
-                </div>
-                <input type="hidden" id="theme-select" value="zone-night">
-            </div>
+            <h1 id="main-title">MUNIR'S WRITING APP</h1>
 
             <div class="row">
                 <label>Duration:</label>
@@ -302,14 +303,17 @@
     <script>
         /* THEMES CONFIGURATION */
         const themes = {
-            'zone-night': { name: 'The Zone (Night)', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', toolbarBg: 'rgba(18,18,18,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
-            'zone-day': { name: 'The Zone (Day)', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', toolbarBg: 'rgba(251,247,240,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'zone-night': { name: 'Sleek Midnight', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', toolbarBg: 'rgba(18,18,18,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'zone-day': { name: 'Coffee Cozy', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', toolbarBg: 'rgba(251,247,240,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
             'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(49,27,146,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
             'ind-dark-2': { name: 'Gulaabi Midnight', bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', toolbarBg: 'rgba(26,0,24,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
             'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(250,248,245,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' }
+            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
+            'ind-dark-3': { name: 'Morpinch Forest', bg: '#004d40', text: '#fff59d', accent: '#ff7043', bar: '#26a69a', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(0,77,64,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
+            'ind-light-3': { name: 'Gulaabi Rose', bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(252,228,236,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' }
         };
 
+        
         function populateThemeList() {
             const list = document.getElementById('theme-list');
             list.innerHTML = '';
