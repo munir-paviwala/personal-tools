@@ -1,130 +1,193 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Zone | Braindump Writer</title>
+    <title>The Zone & The Indian Writer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=VT323&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Dynamic variables - defaults to The Zone Night */
+            --bg: #121212; 
+            --text: #e0e0e0; 
+            --accent: #333; 
+            --bar: #ffffff;
+            --box-bg: rgba(255,255,255,0.02); 
+            --toolbar-bg: rgba(18,18,18,0.95);
             --danger: #ff4757;
-            --bg-night: #121212; --text-night: #e0e0e0; --accent-night: #333; --bar-night: #ffffff;
-            --bg-day: #fbf7f0; --text-day: #5c4b37; --accent-day: #d4c5b0; --bar-day: #8bba94;
-            --transition-speed: 0.5s;
+            --font-body: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --font-heading: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --border-w: 1px;
+            --shadow-offset: 0px;
+            --btn-text-transform: none;
+            --heading-size: 2.2rem;
+            --heading-shadow: none;
+            --transition-speed: 0.4s;
+            --pattern-opacity: 0;
         }
 
-        body.theme-night { --bg: var(--bg-night); --text: var(--text-night); --accent: var(--accent-night); --bar: var(--bar-night); --toolbar-bg: rgba(18,18,18,0.95); }
-        body.theme-day { --bg: var(--bg-day); --text: var(--text-day); --accent: var(--accent-day); --bar: var(--bar-day); --toolbar-bg: rgba(251,247,240,0.95); }
+        body { 
+            margin: 0; padding: 0; 
+            background: var(--bg); color: var(--text); 
+            font-family: var(--font-body); 
+            overflow: hidden; 
+            transition: background var(--transition-speed), color var(--transition-speed); 
+        }
 
-        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace; overflow: hidden; transition: background var(--transition-speed), color var(--transition-speed); }
+        /* Subtle dot pattern for Indian Writer themes */
+        body::before {
+            content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
+            background-size: 35px 35px;
+            opacity: var(--pattern-opacity);
+            transition: opacity var(--transition-speed);
+        }
         
         a { color: var(--bar); text-decoration: none; }
         a:hover { text-decoration: underline; }
 
         #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: transparent; z-index: 1000; }
-        #progress-bar { width: 0%; height: 100%; background: var(--bar); transition: width 1s linear; opacity: 0.7; }
+        #progress-bar { width: 0%; height: 100%; background: var(--bar); transition: width 1s linear, background-color var(--transition-speed); opacity: 0.8; }
 
-        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
+        .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; gap: 15px; transition: opacity 0.4s ease; }
         .hidden { display: none !important; opacity: 0; pointer-events: none; }
 
-        .setup-box { padding: 40px; border-radius: 16px; border: 1px solid var(--accent); background: rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 20px; align-items: center; width: 340px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); box-sizing: border-box; }
-        body.theme-night .setup-box { background: rgba(255,255,255,0.02); }
+        .setup-box { 
+            padding: 40px; 
+            border-radius: calc(16px - (var(--border-w) * 2)); /* Squares off if border is thick */
+            border: var(--border-w) solid var(--accent); 
+            background: var(--box-bg); 
+            display: flex; flex-direction: column; gap: 20px; align-items: center; 
+            width: 380px; max-width: 90%; 
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar); 
+            box-sizing: border-box; backdrop-filter: blur(10px);
+            transition: all var(--transition-speed);
+        }
 
-        h1 { font-weight: 300; letter-spacing: 1px; margin: 0 0 5px 0; font-size: 2.2rem; text-align: center; }
-        .row { display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; width: 100%; align-items: flex-start; position: relative; }
+        h1 { 
+            font-family: var(--font-heading); 
+            font-weight: normal; letter-spacing: 1px; margin: 0 0 5px 0; 
+            font-size: var(--heading-size); text-align: center; 
+            text-shadow: var(--heading-shadow); 
+            line-height: 1; transition: all var(--transition-speed); 
+        }
         
-        button, input[type="number"] { width: 100%; padding: 12px 16px; background: transparent; border: 1px solid var(--accent); color: var(--text); cursor: pointer; border-radius: 8px; font-family: inherit; font-size: 1rem; transition: all 0.2s; outline: none; box-sizing: border-box; }
-        button:hover, input[type="number"]:focus { background: var(--accent); color: var(--bg); }
+        .row { display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; width: 100%; align-items: flex-start; position: relative; font-weight: bold; }
         
+        button, input[type="number"] { 
+            width: 100%; padding: 12px 16px; 
+            background: var(--bg); border: var(--border-w) solid var(--accent); 
+            color: var(--text); cursor: pointer; 
+            border-radius: calc(8px - var(--border-w)); 
+            font-family: var(--font-heading); font-size: 1.1rem; 
+            text-transform: var(--btn-text-transform);
+            box-shadow: calc(var(--shadow-offset)*0.5) calc(var(--shadow-offset)*0.5) 0px var(--bar);
+            transition: all 0.2s; outline: none; box-sizing: border-box; 
+        }
+        button:hover, input[type="number"]:focus { 
+            transform: translate(-1px, -1px);
+            box-shadow: calc(var(--shadow-offset)*0.7) calc(var(--shadow-offset)*0.7) 0px var(--bar);
+            background: var(--accent); color: var(--bg); 
+        }
+
         /* Custom Select Styles */
-        .custom-select { position: relative; width: 100%; font-family: inherit; }
-        .select-selected { padding: 12px 16px; border: 1px solid var(--accent); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; user-select: none; font-size: 1rem; }
-        .select-selected:hover { background: rgba(0,0,0,0.03); }
-        body.theme-night .select-selected:hover { background: rgba(255,255,255,0.03); }
-        .select-selected::after { content: '▼'; font-size: 0.7rem; opacity: 0.6; transition: transform 0.2s; }
+        .custom-select { position: relative; width: 100%; font-family: var(--font-body); }
+        .select-selected { 
+            padding: 12px 16px; border: var(--border-w) solid var(--accent); 
+            border-radius: calc(8px - var(--border-w));
+            background: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center; 
+            transition: all 0.2s; user-select: none; font-size: 1rem; font-weight: bold;
+        }
+        .select-selected:hover { background: var(--accent); color: var(--bg); }
+        .select-selected::after { content: '▼'; font-size: 0.7rem; opacity: 0.8; transition: transform 0.2s; }
         .custom-select.active .select-selected::after { transform: rotate(180deg); }
-        .select-items { position: absolute; top: 100%; left: 0; right: 0; z-index: 99; margin-top: 5px; background: var(--bg); border: 1px solid var(--accent); border-radius: 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: none; }
+        
+        .select-items { 
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 99; margin-top: 5px; 
+            background: var(--bg); border: var(--border-w) solid var(--accent); 
+            border-radius: calc(8px - var(--border-w));
+            max-height: 200px; overflow-y: auto; 
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar); 
+            display: none; transition: all var(--transition-speed); 
+        }
         .custom-select.active .select-items { display: block; }
-        .select-items div { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--accent); transition: background 0.2s; }
+        .select-items div { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--accent); transition: background 0.2s; font-weight: bold; }
         .select-items div:last-child { border-bottom: none; }
         .select-items div:hover { background: var(--accent); color: var(--bg); }
 
         .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; }
-        input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.2); cursor: pointer; }
+        input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.3); cursor: pointer; }
 
-        /* Floating Toggles */
+        /* Floating Controls */
         .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
-        .floating-btn { opacity: 0.25; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
+        .floating-btn { opacity: 0.5; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
         .floating-btn:hover { opacity: 1; }
-        
-        .theme-switch { width: 56px; height: 30px; background: var(--accent); border-radius: 15px; position: relative; padding: 4px; box-sizing: border-box; transition: background 0.3s; }
-        .theme-switch::after { content: "🌙"; position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
-        body.theme-day .theme-switch::after { content: "☀️"; transform: translateX(26px); }
-
-        .mute-btn { width: 40px; height: 40px; border: 1px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--text); font-size: 1.2rem; }
+        .mute-btn { 
+            width: 40px; height: 40px; border: var(--border-w) solid var(--accent); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            background: var(--bg); color: var(--text); box-shadow: calc(var(--shadow-offset)*0.3) calc(var(--shadow-offset)*0.3) 0px var(--bar);
+            transition: all var(--transition-speed); 
+        }
 
         .bottom-links { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px; z-index: 3000; }
-        .bottom-links button { padding: 5px 10px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--text); width: auto; font-size: 0.85rem; }
+        .bottom-links button { padding: 8px 12px; width: auto; font-size: 0.9rem; border-radius: calc(4px - var(--border-w)); }
 
-        /* Modal Overlay */
+        /* Modal */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--bg); border: 1px solid var(--accent); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: left; line-height: 1.6; position: relative; box-sizing: border-box; }
+        .modal-content { 
+            background: var(--bg); border: var(--border-w) solid var(--accent); padding: 30px; 
+            border-radius: calc(12px - var(--border-w)); max-width: 450px; width: 90%; text-align: left; line-height: 1.6; position: relative; box-sizing: border-box; 
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar); transition: all var(--transition-speed); 
+        }
         .modal-content p { font-size: 0.95rem; margin: 10px 0; }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; border: none !important; }
+        .modal-content h2 { font-family: var(--font-heading); font-size: 2rem; color: var(--text); margin-top: 0; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none !important; box-shadow: none !important; font-size: 1.5rem; color: var(--text); cursor: pointer; width: auto; padding: 0; line-height: 1; }
         .close-modal:hover { background: transparent !important; color: var(--danger) !important; }
 
         /* Writing Area */
         #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0 40px; box-sizing: border-box; }
         #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
         
-        #visual-display { width: 100%; max-width: 750px; height: 100dvh; font-size: 1.3rem; line-height: 1.8; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 40vh; scroll-behavior: smooth; }
-        
-        /* The Top Padding Spacer */
+        #visual-display { width: 100%; max-width: 800px; height: 100dvh; font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.6; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 40vh; scroll-behavior: smooth; }
         #visual-display::before { content: ''; display: block; height: 30vh; width: 100%; }
         
-        /* The Animated Cursor */
         #visual-display.active::after { content: '█'; display: inline-block; width: 1ch; animation: blink 1s step-end infinite; vertical-align: bottom; margin-left: 2px; opacity: 0.8; color: var(--text); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        #visual-display::-webkit-scrollbar { width: 6px; }
-        #visual-display::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        #visual-display::-webkit-scrollbar { width: 8px; }
+        #visual-display::-webkit-scrollbar-thumb { background: var(--accent); }
         
         .hardcore { filter: blur(8px); opacity: 0.8; }
         
-        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; font-weight: 300; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; }
+        #flash-char { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-heading); font-size: 15rem; font-weight: 300; color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 1; }
         
         #vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 0px rgba(255,71,87,0); transition: box-shadow 0.4s ease-in-out; z-index: 5; }
-        .warning-glow { box-shadow: inset 0 0 80px rgba(255,71,87,0.4) !important; }
+        .warning-glow { box-shadow: inset 0 0 100px rgba(255,71,87,0.5) !important; }
 
-        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: 1px solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); backdrop-filter: blur(10px); box-sizing: border-box; }
+        #success-toolbar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toolbar-bg); border-top: var(--border-w) solid var(--accent); display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2000; transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: translateY(100%); backdrop-filter: blur(10px); box-sizing: border-box; }
         #success-toolbar.visible { transform: translateY(0); }
+        #toolbar-msg { font-family: var(--font-heading); font-size: 1.1rem; opacity: 0.8; }
 
-        /* Mobile Responsiveness */
         @media (max-width: 600px) {
             .setup-box { padding: 25px 20px; }
-            h1 { font-size: 1.8rem; }
+            h1 { font-size: 2rem; }
             #writing-area { padding: 0 20px; }
-            #visual-display { font-size: 1.1rem; }
-            #flash-char { font-size: 6rem; }
-            .floating-controls { top: 15px; right: 15px; gap: 10px; }
-            .bottom-links { bottom: 15px; left: 15px; flex-direction: column; }
+            #visual-display { font-size: 1.2rem; }
+            #flash-char { font-size: 8rem; }
             #success-toolbar { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
 </head>
-<body class="theme-night">
+<body>
 
     <audio id="bg-music"></audio>
 
     <div class="floating-controls">
-        <div id="theme-wrapper" class="floating-btn" onclick="toggleTheme()">
-            <div class="theme-switch"></div>
+        <div id="mute-wrapper" class="floating-btn" onclick="toggleMute()">
+            <div class="mute-btn" id="mute-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </div>
         </div>
-<div id="mute-wrapper" class="floating-btn" onclick="toggleMute()">
-    <div class="mute-btn" id="mute-icon">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-    </div>
-</div>
     </div>
     
     <div class="bottom-links">
@@ -135,17 +198,17 @@
     <div id="about-modal" class="modal hidden">
         <div class="modal-content">
             <button class="close-modal" onclick="toggleModal('about-modal', false)">&times;</button>
-            <h2 style="margin-top: 0;">Welcome to The Zone</h2>
+            <h2>Welcome to The Zone</h2>
             <p>This tool is designed to bypass writer's block by forcing momentum. Set your timer, pick your punishment, and do not stop typing.</p>
-            <p style="opacity: 0.7; font-size: 0.85rem; margin-top: 20px;"><em>Inspired by The Most Dangerous Writing App. It was extreme. We needed a milder warning app with customizable consequences.</em></p>
+            <p><strong>No Time Limit mode:</strong> Use the app as a focused, offline notepad without a timer.</p>
         </div>
     </div>
 
     <div id="credits-modal" class="modal hidden">
         <div class="modal-content">
             <button class="close-modal" onclick="toggleModal('credits-modal', false)">&times;</button>
-            <h2 style="margin-top: 0;">Playlist Credits</h2>
-            <p>Music by <a href="#" target="_blank">Monume</a>, <a href="#" target="_blank">DELOSound</a>, and <a href="#" target="_blank">MondaMusic</a> from Pixabay.</p>
+            <h2>Vibe Credits</h2>
+            <p>Music by Monume, DELOSound, and MondaMusic.</p>
         </div>
     </div>
 
@@ -155,8 +218,18 @@
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
-            <h1>THE ZONE</h1>
+            <h1 id="main-title">THE WRITER</h1>
             
+            <div class="row">
+                <label>Theme Palette:</label>
+                <div class="custom-select" id="theme-selector" data-target="theme-select">
+                    <div class="select-selected" id="theme-display">The Zone (Night)</div>
+                    <div class="select-items" id="theme-list">
+                        </div>
+                </div>
+                <input type="hidden" id="theme-select" value="zone-night">
+            </div>
+
             <div class="row">
                 <label>Duration:</label>
                 <div class="custom-select" data-target="timer-select">
@@ -166,6 +239,7 @@
                         <div data-value="2.83">2:50 (Sprint)</div>
                         <div data-value="5">5 Mins</div>
                         <div data-value="10">10 Mins</div>
+                        <div data-value="infinite">No Time Limit</div>
                         <div data-value="custom">Custom...</div>
                     </div>
                 </div>
@@ -199,23 +273,23 @@
                 <input type="hidden" id="danger-mode" value="warning">
             </div>
 
-            <div class="row-inline" style="margin-top: 10px;">
+            <div class="row-inline" style="margin-top: 5px;">
                 <label for="music-toggle">Play Lofi Playlist</label>
                 <input type="checkbox" id="music-toggle"> 
             </div>
             
-            <button onclick="initSession()" style="margin-top: 10px; font-weight: bold; border-width: 2px;">START WRITING</button>
+            <button onclick="initSession()" style="margin-top: 10px;">START WRITING</button>
         </div>
     </div>
 
     <div id="fail-screen" class="screen hidden">
-        <h1 style="color: var(--danger); font-size: 3rem;">WIPEOUT.</h1>
-        <p style="opacity: 0.7; margin-bottom: 30px;">The text is gone. Take a breath and try again.</p>
+        <h1 style="color: var(--danger); font-size: 4rem;">WIPEOUT.</h1>
+        <p style="opacity: 0.9; margin-bottom: 30px; font-weight: bold; font-size: 1.2rem;">The text is gone. Take a breath and try again.</p>
         <button onclick="returnToSetup()" style="width: auto;">Restart</button>
     </div>
 
     <div id="success-toolbar">
-        <span id="toolbar-msg" style="opacity: 0.7; font-size: 0.9rem;">Timer done. Keep writing, or save when ready.</span>
+        <span id="toolbar-msg">Timer done. Keep writing, or save when ready.</span>
         <button id="save-btn" onclick="saveWork()" style="width: auto;">Save (.md)</button>
         <button onclick="returnToSetup()" style="width: auto;">New Session</button>
     </div>
@@ -226,17 +300,70 @@
     </div>
 
     <script>
+        /* THEMES CONFIGURATION */
+        const themes = {
+            'zone-night': { name: 'The Zone (Night)', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', toolbarBg: 'rgba(18,18,18,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'zone-day': { name: 'The Zone (Day)', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', toolbarBg: 'rgba(251,247,240,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(49,27,146,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
+            'ind-dark-2': { name: 'Gulaabi Midnight', bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', toolbarBg: 'rgba(26,0,24,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
+            'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(250,248,245,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
+            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' }
+        };
+
+        function populateThemeList() {
+            const list = document.getElementById('theme-list');
+            list.innerHTML = '';
+            for (const [key, t] of Object.entries(themes)) {
+                const div = document.createElement('div');
+                div.dataset.value = key;
+                div.innerText = t.name;
+                // Add inline styles so the user sees a preview of the theme
+                div.style.backgroundColor = t.bg;
+                div.style.color = t.text;
+                div.style.fontFamily = t.fontHeading;
+                div.style.borderBottom = `2px solid ${t.accent}`;
+                div.addEventListener('click', () => {
+                    document.getElementById('theme-display').innerText = t.name;
+                    document.getElementById('theme-select').value = key;
+                    applyTheme(key);
+                    document.getElementById('theme-selector').classList.remove('active');
+                });
+                list.appendChild(div);
+            }
+        }
+
+        function applyTheme(themeKey) {
+            const t = themes[themeKey];
+            if(!t) return;
+            const root = document.documentElement;
+            root.style.setProperty('--bg', t.bg);
+            root.style.setProperty('--text', t.text);
+            root.style.setProperty('--accent', t.accent);
+            root.style.setProperty('--bar', t.bar);
+            root.style.setProperty('--box-bg', t.boxBg);
+            root.style.setProperty('--toolbar-bg', t.toolbarBg);
+            root.style.setProperty('--font-body', t.fontBody);
+            root.style.setProperty('--font-heading', t.fontHeading);
+            root.style.setProperty('--border-w', t.borderW);
+            root.style.setProperty('--shadow-offset', t.shadowW);
+            root.style.setProperty('--btn-text-transform', t.btnTransform);
+            root.style.setProperty('--danger', t.danger);
+            root.style.setProperty('--heading-size', t.headingSize);
+            root.style.setProperty('--pattern-opacity', t.patternOpacity);
+            root.style.setProperty('--heading-shadow', t.shadowW === '0px' ? 'none' : `3px 3px ${t.bar}`);
+
+            document.getElementById('main-title').innerText = themeKey.includes('zone') ? 'THE ZONE' : 'INDIAN WRITER';
+            savePreferences();
+        }
+
+        /* SESSION MECHANICS */
         let duration, timeLeft, clock, dangerTimer;
         let lastInputTime = Date.now();
         let isSessionActive = false; 
+        let hasUnsavedText = false; // Prevents accidental closes
         
-        const playlist = [
-            'assets/music/audio1.mp3',
-            'assets/music/audio2.mp3',
-            'assets/music/audio3.mp3',
-            'assets/music/audio4.mp3'
-        ];
-        let currentTrackIndex = Math.floor(Math.random() * playlist.length); 
+        const playlist = ['assets/music/audio1.mp3', 'assets/music/audio2.mp3']; // Replace with actual paths
+        let currentTrackIndex = 0; 
         const musicPlayer = document.getElementById('bg-music');
 
         musicPlayer.addEventListener('ended', () => {
@@ -255,35 +382,47 @@
         const toolbarMsg = document.getElementById('toolbar-msg');
 
         document.addEventListener('DOMContentLoaded', () => {
+            populateThemeList();
             initCustomSelects();
             
-            const savedPrefs = localStorage.getItem('theZonePrefs');
+            const savedPrefs = localStorage.getItem('unifiedWriterPrefs');
             if (savedPrefs) {
                 const prefs = JSON.parse(savedPrefs);
                 setCustomSelectValue('timer-select', prefs.timer || '5');
                 setCustomSelectValue('visual-mode', prefs.visual || 'blur');
                 setCustomSelectValue('danger-mode', prefs.danger || 'warning');
                 document.getElementById('music-toggle').checked = prefs.music !== false;
-                checkCustomTime();
+                
+                const savedTheme = prefs.theme || 'zone-night';
+                setCustomSelectValue('theme-select', savedTheme, 'theme-selector', 'theme-display');
+                applyTheme(savedTheme);
             } else {
                 setCustomSelectValue('timer-select', '5');
                 setCustomSelectValue('visual-mode', 'blur');
                 setCustomSelectValue('danger-mode', 'warning');
                 document.getElementById('music-toggle').checked = true;
+                applyTheme('zone-night');
+            }
+        });
+
+        /* DATA LOSS PREVENTION */
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedText) {
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
 
         function initCustomSelects() {
             document.querySelectorAll('.custom-select').forEach(customSelect => {
+                if (customSelect.id === 'theme-selector') return; // Handled separately
                 const selected = customSelect.querySelector('.select-selected');
                 const itemsList = customSelect.querySelector('.select-items');
                 const hiddenInput = document.getElementById(customSelect.dataset.target);
 
                 selected.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    document.querySelectorAll('.custom-select').forEach(el => {
-                        if (el !== customSelect) el.classList.remove('active');
-                    });
+                    document.querySelectorAll('.custom-select').forEach(el => { if (el !== customSelect) el.classList.remove('active'); });
                     customSelect.classList.toggle('active');
                 });
 
@@ -292,10 +431,17 @@
                         selected.innerText = item.innerText;
                         hiddenInput.value = item.dataset.value;
                         customSelect.classList.remove('active');
-                        
                         if (hiddenInput.id === 'timer-select') checkCustomTime();
                     });
                 });
+            });
+
+            // Specific bind for the theme selector to handle toggles
+            const themeSel = document.getElementById('theme-selector');
+            themeSel.querySelector('.select-selected').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select').forEach(el => { if (el !== themeSel) el.classList.remove('active'); });
+                themeSel.classList.toggle('active');
             });
 
             document.addEventListener('click', () => {
@@ -303,26 +449,28 @@
             });
         }
 
-        function setCustomSelectValue(targetId, value) {
+        function setCustomSelectValue(targetId, value, selectId = null, displayId = null) {
             const hiddenInput = document.getElementById(targetId);
-            const customSelect = document.querySelector(`.custom-select[data-target="${targetId}"]`);
+            const customSelect = document.getElementById(selectId) || document.querySelector(`.custom-select[data-target="${targetId}"]`);
             if (!customSelect || !hiddenInput) return;
             
             const targetItem = customSelect.querySelector(`.select-items div[data-value="${value}"]`);
             if (targetItem) {
-                customSelect.querySelector('.select-selected').innerText = targetItem.innerText;
+                if (displayId) {
+                    document.getElementById(displayId).innerText = targetItem.innerText;
+                } else {
+                    customSelect.querySelector('.select-selected').innerText = targetItem.innerText;
+                }
                 hiddenInput.value = value;
+                if (targetId === 'timer-select') checkCustomTime();
             }
         }
 
         function checkCustomTime() {
             const val = document.getElementById('timer-select').value;
             const customInput = document.getElementById('custom-time');
-            if (val === 'custom') {
-                customInput.classList.remove('hidden');
-            } else {
-                customInput.classList.add('hidden');
-            }
+            if (val === 'custom') customInput.classList.remove('hidden');
+            else customInput.classList.add('hidden');
         }
 
         function savePreferences() {
@@ -330,33 +478,25 @@
                 timer: document.getElementById('timer-select').value,
                 visual: document.getElementById('visual-mode').value,
                 danger: document.getElementById('danger-mode').value,
-                music: document.getElementById('music-toggle').checked
+                music: document.getElementById('music-toggle').checked,
+                theme: document.getElementById('theme-select').value
             };
-            localStorage.setItem('theZonePrefs', JSON.stringify(prefs));
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            if (body.classList.contains('theme-night')) {
-                body.classList.replace('theme-night', 'theme-day');
-            } else {
-                body.classList.replace('theme-day', 'theme-night');
-            }
+            localStorage.setItem('unifiedWriterPrefs', JSON.stringify(prefs));
         }
 
         function toggleMute() {
-    const icon = document.getElementById('mute-icon');
-    const volUpSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
-    const volOffSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
-    
-    if (musicPlayer.muted) {
-        musicPlayer.muted = false;
-        icon.innerHTML = volUpSVG;
-    } else {
-        musicPlayer.muted = true;
-        icon.innerHTML = volOffSVG;
-    }
-}
+            const icon = document.getElementById('mute-icon');
+            const volUpSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+            const volOffSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
+            
+            if (musicPlayer.muted) {
+                musicPlayer.muted = false;
+                icon.innerHTML = volUpSVG;
+            } else {
+                musicPlayer.muted = true;
+                icon.innerHTML = volOffSVG;
+            }
+        }
 
         function toggleModal(modalId, show) {
             const modal = document.getElementById(modalId);
@@ -372,20 +512,19 @@
         function initSession() {
             const selectVal = document.getElementById('timer-select').value;
             const minutes = selectVal === 'custom' ? document.getElementById('custom-time').value : selectVal;
-            if (!minutes || minutes <= 0) return alert("Please enter a valid time.");
+            
+            if (selectVal !== 'infinite' && (!minutes || minutes <= 0)) return alert("Please enter a valid time.");
 
             savePreferences(); 
 
-            duration = parseFloat(minutes) * 60;
-            timeLeft = duration;
             isSessionActive = true;
-            
             input.value = "";
             display.innerText = "";
+            hasUnsavedText = false;
+            
             bar.style.width = "0%";
             toolbar.classList.remove('visible');
             display.classList.add('active'); // Activates cursor
-            toolbarMsg.innerText = "Timer done. Keep writing, or save when ready.";
             
             document.querySelector('.bottom-links').style.display = 'none';
             
@@ -403,18 +542,26 @@
                 musicPlayer.pause();
             }
 
-            if (document.getElementById('visual-mode').value === 'blur') {
-                display.classList.add('hardcore');
-            } else {
-                display.classList.remove('hardcore');
-            }
+            if (document.getElementById('visual-mode').value === 'blur') display.classList.add('hardcore');
+            else display.classList.remove('hardcore');
 
             showScreen(null);
             input.disabled = false;
             input.focus();
-            
             lastInputTime = Date.now();
-            clock = setInterval(tick, 1000);
+
+            if (selectVal === 'infinite') {
+                duration = 0;
+                bar.style.opacity = '0'; // Hide bar
+                toolbarMsg.innerText = "No Time Limit. You are in notepad mode. Consequences still apply.";
+                toolbar.classList.add('visible');
+            } else {
+                duration = parseFloat(minutes) * 60;
+                timeLeft = duration;
+                bar.style.opacity = '0.8';
+                toolbarMsg.innerText = "Timer done. Keep writing, or save when ready.";
+                clock = setInterval(tick, 1000);
+            }
             dangerLoop();
         }
 
@@ -422,7 +569,6 @@
             timeLeft--;
             const percent = ((duration - timeLeft) / duration) * 100;
             bar.style.width = percent + "%";
-            
             if (timeLeft <= 0) endTimerPhase();
         }
 
@@ -435,16 +581,14 @@
 
                 const idleTime = Date.now() - lastInputTime;
                 
-                if (idleTime > 2000) { 
-                    vignette.classList.add('warning-glow');
-                } else {
-                    vignette.classList.remove('warning-glow');
-                }
+                if (idleTime > 2000) vignette.classList.add('warning-glow');
+                else vignette.classList.remove('warning-glow');
 
                 if (idleTime > 6000) {
                     if (dangerMode === 'pause') {
                         toolbarMsg.innerText = "Session halted due to inactivity. Save your work.";
                         toolbarMsg.style.color = "var(--danger)";
+                        if(duration > 0) clearInterval(clock);
                         endTimerPhase();
                     } else if (dangerMode === 'wipeout') {
                         killSession(); 
@@ -453,23 +597,19 @@
             }, 100);
         }
 
-        // Force cursor to the end to match braindump philosophy
         function forceCursorToEnd() {
-            if(isSessionActive) {
-                input.selectionStart = input.selectionEnd = input.value.length;
-            }
+            if(isSessionActive) input.selectionStart = input.selectionEnd = input.value.length;
         }
         
         input.addEventListener('click', forceCursorToEnd);
         input.addEventListener('keydown', (e) => {
-            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault(); // Disable arrow keys
-            }
+            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.key)) e.preventDefault();
             forceCursorToEnd();
         });
 
         input.addEventListener('input', () => {
             lastInputTime = Date.now();
+            hasUnsavedText = input.value.length > 0;
             display.innerText = input.value;
             display.scrollTop = display.scrollHeight;
 
@@ -477,7 +617,7 @@
                 const lastChar = input.value.slice(-1);
                 if (lastChar && lastChar.trim() !== '') {
                     flash.innerText = lastChar;
-                    flash.style.opacity = 0.2;
+                    flash.style.opacity = document.getElementById('theme-select').value.includes('zone') ? 0.2 : 0.4;
                     setTimeout(() => flash.style.opacity = 0, 150);
                 }
             }
@@ -489,7 +629,7 @@
             isSessionActive = false; 
             vignette.classList.remove('warning-glow');
             display.classList.remove('hardcore');
-            display.classList.remove('active'); // Removes cursor
+            display.classList.remove('active'); 
             toolbar.classList.add('visible');
         }
 
@@ -497,6 +637,7 @@
             clearInterval(clock);
             clearInterval(dangerTimer);
             isSessionActive = false;
+            hasUnsavedText = false; // It's wiped, so safe to leave
             input.disabled = true;
             vignette.classList.remove('warning-glow');
             display.classList.remove('active');
@@ -520,12 +661,21 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
+            hasUnsavedText = false; // State is saved
             const saveBtn = document.getElementById('save-btn');
             saveBtn.innerText = "✓ Saved";
             setTimeout(() => saveBtn.innerText = "Save (.md)", 2000);
         }
 
         function returnToSetup() {
+            if (hasUnsavedText && input.value.length > 0) {
+                if (!confirm("You have text on the screen. Are you sure you want to exit? Your work will be lost.")) {
+                    return;
+                }
+            }
+            hasUnsavedText = false; // Clear lock
+            clearInterval(clock);
+            clearInterval(dangerTimer);
             showScreen('setup');
             toolbar.classList.remove('visible');
             toolbarMsg.style.color = "";
