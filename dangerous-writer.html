@@ -116,7 +116,33 @@
         .select-items div:hover { background: var(--accent); color: var(--bg); }
 
         .row-inline { display: flex; justify-content: space-between; width: 100%; align-items: center; }
-        input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.3); cursor: pointer; }
+        
+        /* Custom Checkbox */
+        input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 24px; height: 24px;
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(4px - var(--border-w));
+            background-color: var(--bg);
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            transition: all 0.2s;
+            box-shadow: calc(var(--shadow-offset)*0.3) calc(var(--shadow-offset)*0.3) 0px var(--bar);
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--bar);
+            border-color: var(--bar);
+        }
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 7px; top: 2px;
+            width: 6px; height: 12px;
+            border: solid var(--bg);
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
 
         /* Floating Controls */
         .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; transition: opacity 0.5s ease; }
@@ -153,7 +179,7 @@
         #writing-area { position: relative; width: 100vw; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 0 40px; box-sizing: border-box; }
         #real-input { position: absolute; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: text; resize: none; top: 0; left: 0; }
         
-        #visual-display { width: 100%; max-width: 800px; height: 100dvh; font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.6; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 40vh; scroll-behavior: smooth; }
+        #visual-display { width: 100%; max-width: 800px; height: 100dvh; font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.6; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 10vh; scroll-behavior: smooth; }
         #visual-display::before { content: ''; display: block; height: 30vh; width: 100%; }
         
         #cursor { display: none; }
@@ -230,7 +256,7 @@
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
-            <h1 id="main-title">MUNIR'S WRITING APP</h1>
+            <h1 id="main-title">THE DANGEROUS WRITER</h1>
 
             <div class="row">
                 <label>Duration:</label>
@@ -306,12 +332,12 @@
         const themes = {
             'zone-night': { name: 'Sleek Midnight', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', toolbarBg: 'rgba(18,18,18,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
             'zone-day': { name: 'Coffee Cozy', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', toolbarBg: 'rgba(251,247,240,0.95)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
-            'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(49,27,146,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-dark-2': { name: 'Gulaabi Midnight', bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', toolbarBg: 'rgba(26,0,24,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(250,248,245,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-dark-3': { name: 'Morpinch Forest', bg: '#004d40', text: '#fff59d', accent: '#ff7043', bar: '#26a69a', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(0,77,64,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' },
-            'ind-light-3': { name: 'Gulaabi Rose', bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(252,228,236,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '3.2rem', patternOpacity: '0.15' }
+            'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(49,27,146,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-dark-2': { name: 'Gulaabi Midnight', bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', toolbarBg: 'rgba(26,0,24,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(250,248,245,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(224,242,241,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-dark-3': { name: 'Morpinch Forest', bg: '#004d40', text: '#fff59d', accent: '#ff7043', bar: '#26a69a', boxBg: 'rgba(0,0,0,0.4)', toolbarBg: 'rgba(0,77,64,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-3': { name: 'Gulaabi Rose', bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(252,228,236,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' }
         };
 
         
@@ -325,7 +351,6 @@
                 // Add inline styles so the user sees a preview of the theme
                 div.style.backgroundColor = t.bg;
                 div.style.color = t.text;
-                div.style.fontFamily = t.fontHeading;
                 div.style.borderBottom = `2px solid ${t.accent}`;
                 div.addEventListener('click', () => {
                     document.getElementById('theme-display').innerText = t.name;
@@ -357,7 +382,6 @@
             root.style.setProperty('--pattern-opacity', t.patternOpacity);
             root.style.setProperty('--heading-shadow', t.shadowW === '0px' ? 'none' : `3px 3px ${t.bar}`);
 
-            document.getElementById('main-title').innerText = themeKey.includes('zone') ? 'THE ZONE' : 'INDIAN WRITER';
             savePreferences();
         }
 
@@ -713,6 +737,11 @@
             toolbar.classList.remove('visible');
             toolbarMsg.style.color = "";
             document.querySelector('.bottom-links').style.display = 'flex';
+            
+            // Clear text remnants
+            input.value = "";
+            document.getElementById('text-content').innerText = "";
+            document.getElementById('cursor').classList.remove('active');
         }
     </script>
 </body>
