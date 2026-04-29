@@ -119,7 +119,7 @@
         input[type="checkbox"] { accent-color: var(--bar); transform: scale(1.3); cursor: pointer; }
 
         /* Floating Controls */
-        .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; }
+        .floating-controls { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; align-items: flex-end; z-index: 5000; transition: opacity 0.5s ease; }
         .floating-btn { opacity: 0.5; transition: opacity 0.3s ease; cursor: pointer; font-size: 0.9rem; pointer-events: auto; }
         .floating-btn:hover { opacity: 1; }
         .mute-btn { 
@@ -156,7 +156,8 @@
         #visual-display { width: 100%; max-width: 800px; height: 100dvh; font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.6; text-align: left; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; transition: filter 0.3s ease; padding-right: 15px; padding-bottom: 40vh; scroll-behavior: smooth; }
         #visual-display::before { content: ''; display: block; height: 30vh; width: 100%; }
         
-        #visual-display.active::after { content: '█'; display: inline-block; width: 1ch; animation: blink 1s step-end infinite; vertical-align: bottom; margin-left: 2px; opacity: 0.8; color: var(--text); }
+        #cursor { display: none; }
+        #cursor.active { display: inline-block; animation: blink 1s step-end infinite; vertical-align: bottom; margin-left: 2px; opacity: 0.8; color: var(--text); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         #visual-display::-webkit-scrollbar { width: 8px; }
@@ -297,7 +298,7 @@
 
     <div id="writing-area">
         <textarea id="real-input" spellcheck="false" autocomplete="off" disabled></textarea>
-        <div id="visual-display"></div>
+        <div id="visual-display"><span id="text-content"></span><span id="cursor">█</span></div>
     </div>
 
     <script>
@@ -407,7 +408,35 @@
                 document.getElementById('music-toggle').checked = true;
                 applyTheme('zone-night');
             }
+
+            wakeControls();
+            
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => {
+                    document.getElementById('writing-area').style.height = window.visualViewport.height + 'px';
+                    if (isSessionActive) {
+                        display.scrollTop = display.scrollHeight;
+                    }
+                });
+                document.getElementById('writing-area').style.height = window.visualViewport.height + 'px';
+            }
         });
+
+        let hideControlsTimer;
+        function wakeControls() {
+            const fc = document.querySelector('.floating-controls');
+            if(fc) {
+                fc.style.opacity = '1';
+                fc.style.pointerEvents = 'auto';
+                clearTimeout(hideControlsTimer);
+                hideControlsTimer = setTimeout(() => {
+                    fc.style.opacity = '0';
+                    fc.style.pointerEvents = 'none';
+                }, 2500);
+            }
+        }
+        document.addEventListener('mousemove', wakeControls);
+        document.addEventListener('touchstart', wakeControls);
 
         /* DATA LOSS PREVENTION */
         window.addEventListener('beforeunload', (e) => {
@@ -523,12 +552,12 @@
 
             isSessionActive = true;
             input.value = "";
-            display.innerText = "";
+            document.getElementById('text-content').innerText = "";
             hasUnsavedText = false;
             
             bar.style.width = "0%";
             toolbar.classList.remove('visible');
-            display.classList.add('active'); // Activates cursor
+            document.getElementById('cursor').classList.add('active'); // Activates cursor
             
             document.querySelector('.bottom-links').style.display = 'none';
             
@@ -546,8 +575,8 @@
                 musicPlayer.pause();
             }
 
-            if (document.getElementById('visual-mode').value === 'blur') display.classList.add('hardcore');
-            else display.classList.remove('hardcore');
+            if (document.getElementById('visual-mode').value === 'blur') document.getElementById('text-content').classList.add('hardcore');
+            else document.getElementById('text-content').classList.remove('hardcore');
 
             showScreen(null);
             input.disabled = false;
@@ -614,7 +643,7 @@
         input.addEventListener('input', () => {
             lastInputTime = Date.now();
             hasUnsavedText = input.value.length > 0;
-            display.innerText = input.value;
+            document.getElementById('text-content').innerText = input.value;
             display.scrollTop = display.scrollHeight;
 
             if (isSessionActive && document.getElementById('visual-mode').value === 'blur') {
@@ -632,8 +661,8 @@
             clearInterval(dangerTimer);
             isSessionActive = false; 
             vignette.classList.remove('warning-glow');
-            display.classList.remove('hardcore');
-            display.classList.remove('active'); 
+            document.getElementById('text-content').classList.remove('hardcore');
+            document.getElementById('cursor').classList.remove('active'); 
             toolbar.classList.add('visible');
         }
 
@@ -644,10 +673,10 @@
             hasUnsavedText = false; // It's wiped, so safe to leave
             input.disabled = true;
             vignette.classList.remove('warning-glow');
-            display.classList.remove('active');
+            document.getElementById('cursor').classList.remove('active');
             
             input.value = "";
-            display.innerText = "";
+            document.getElementById('text-content').innerText = "";
             showScreen('fail');
         }
 
