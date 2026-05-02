@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Munir's Personal Tools Library</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    <link href="assets/css/space-grotesk.css" rel="stylesheet">
+    <link href="assets/css/vt323.css" rel="stylesheet">
     
     <style>
         :root {
@@ -200,8 +201,19 @@
     </div>
 
     <footer>
-        &copy; 2026 // Built for personal utility
+        &copy; 2026 // Built for personal utility<br><br>
+        <button onclick="wipeAllData()" style="background: var(--burnt-orange); color: var(--white-silk); padding: 10px; border: 2px solid var(--marigold); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase;">Wipe All Local Data</button>
     </footer>
 
+    <script>
+    function wipeAllData() {
+        if(confirm("Are you sure? This will delete all saved themes, preferences, and your markdown reading history.")) {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert("All local data has been successfully wiped. System clean.");
+            location.reload();
+        }
+    }
+    </script>
 </body>
 </html>
