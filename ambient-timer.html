@@ -357,6 +357,7 @@
             text-align: center;
             line-height: 1.6;
             box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+            position: relative;
         }
 
         .modal-content h2 {
@@ -370,6 +371,27 @@
             margin-top: 20px;
         }
 
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .close-modal:hover {
+            background: transparent;
+            color: var(--danger);
+            transform: scale(1.1);
+            box-shadow: none;
+        }
+
         /* Break Screen */
         #break-screen {
             background: rgba(var(--bg), 0.85);
@@ -381,6 +403,7 @@
             color: var(--bar);
             max-width: 800px;
             padding: 20px;
+            text-align: center;
         }
 
         #break-timer-display {
@@ -443,6 +466,35 @@
             to {
                 opacity: 0;
             }
+        }
+
+        /* Bottom Links */
+        .bottom-links {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 5000;
+            display: flex;
+            gap: 15px;
+            transition: opacity 0.5s;
+        }
+
+        .bottom-links .floating-btn {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            text-decoration: underline;
+            box-shadow: none;
+            width: auto;
+            padding: 0;
+        }
+
+        .bottom-links .floating-btn:hover {
+            background: transparent;
+            color: var(--bar);
+            transform: none;
         }
 
         @media (max-width: 600px) {
@@ -508,6 +560,11 @@
         </div>
     </div>
 
+    <div class="bottom-links" id="bottom-links-container">
+        <button class="floating-btn" onclick="toggleModal('about-modal', true)">About</button>
+        <button class="floating-btn" onclick="toggleModal('credits-modal', true)">Credits</button>
+    </div>
+
     <div id="session-tracker" class="hidden">Loop: 1 / 4</div>
 
     <div id="setup-screen" class="screen">
@@ -569,6 +626,11 @@
                 <input type="checkbox" id="music-toggle" checked>
             </div>
 
+            <div class="row-inline">
+                <label for="chime-toggle">Play Ping Sound on End</label>
+                <input type="checkbox" id="chime-toggle" checked>
+            </div>
+
             <button onclick="startSession()" style="margin-top: 10px; background: var(--bar); color: var(--bg);">START
                 FOCUS</button>
         </div>
@@ -589,6 +651,23 @@
                 <button onclick="cancelSession()"
                     style="background: var(--danger); color: white; border-color: var(--danger);">End Session</button>
             </div>
+        </div>
+    </div>
+
+    <div id="about-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleModal('about-modal', false)">&times;</button>
+            <h2>Ambient Timer</h2>
+            <p>An offline-first, aesthetic visual timer designed for deep focus. Customize your durations, pick a theme,
+                and watch time pass through procedural visuals rather than a stressful ticking clock.</p>
+        </div>
+    </div>
+
+    <div id="credits-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleModal('credits-modal', false)">&times;</button>
+            <h2>Vibe Credits</h2>
+            <p>Music by Monume, DELOSound, and MondaMusic.</p>
         </div>
     </div>
 
@@ -702,11 +781,15 @@
         }
 
         function savePreferences() {
+            const workVal = document.getElementById('timer-select').value;
+            const breakVal = document.getElementById('break-select').value;
+
             const prefs = {
-                timer: document.getElementById('timer-select').value,
-                break: document.getElementById('break-select').value,
+                timer: workVal === 'custom' ? document.getElementById('custom-time').value : workVal,
+                break: breakVal === 'custom' ? document.getElementById('custom-break').value : breakVal,
                 loops: document.getElementById('loops-select').value,
                 music: document.getElementById('music-toggle').checked,
+                chime: document.getElementById('chime-toggle').checked,
                 theme: document.getElementById('theme-select').value
             };
             localStorage.setItem('ambientTimerPrefs', JSON.stringify(prefs));
@@ -723,10 +806,32 @@
             const savedPrefs = localStorage.getItem('ambientTimerPrefs') || localStorage.getItem('unifiedWriterPrefs');
             if (savedPrefs) {
                 const prefs = JSON.parse(savedPrefs);
-                if (prefs.timer && document.querySelector(`#timer-select ~ .select-items div[data-value="${prefs.timer}"]`)) setCustomSelectValue('timer-select', prefs.timer);
-                if (prefs.break && document.querySelector(`#break-select ~ .select-items div[data-value="${prefs.break}"]`)) setCustomSelectValue('break-select', prefs.break);
+
+                // Load timer robustly
+                if (prefs.timer) {
+                    if (document.querySelector(`#timer-select ~ .select-items div[data-value="${prefs.timer}"]`)) {
+                        setCustomSelectValue('timer-select', prefs.timer);
+                    } else {
+                        setCustomSelectValue('timer-select', 'custom');
+                        document.getElementById('custom-time').value = prefs.timer;
+                        document.getElementById('custom-time').classList.remove('hidden');
+                    }
+                }
+
+                // Load break robustly
+                if (prefs.break) {
+                    if (document.querySelector(`#break-select ~ .select-items div[data-value="${prefs.break}"]`)) {
+                        setCustomSelectValue('break-select', prefs.break);
+                    } else {
+                        setCustomSelectValue('break-select', 'custom');
+                        document.getElementById('custom-break').value = prefs.break;
+                        document.getElementById('custom-break').classList.remove('hidden');
+                    }
+                }
+
                 if (prefs.loops) setCustomSelectValue('loops-select', prefs.loops);
                 if (prefs.music !== undefined) document.getElementById('music-toggle').checked = prefs.music;
+                if (prefs.chime !== undefined) document.getElementById('chime-toggle').checked = prefs.chime;
 
                 const savedTheme = prefs.theme || 'zone-night';
                 setCustomSelectValue('theme-select', savedTheme, 'theme-selector', 'theme-display');
@@ -772,7 +877,7 @@
         }
 
         function playChime(message) {
-            if (isMuted) {
+            if (isMuted || !document.getElementById('chime-toggle').checked) {
                 showToast(message);
                 return;
             }
@@ -810,10 +915,12 @@
         let hideControlsTimer;
         function wakeControls() {
             const fc = document.querySelector('.floating-controls');
+            const bl = document.getElementById('bottom-links-container');
             const tracker = document.getElementById('session-tracker');
             if (fc) {
                 fc.style.opacity = '1';
                 fc.style.pointerEvents = 'auto';
+                if (bl) bl.style.opacity = '1';
                 if (tracker && isSessionActive) tracker.style.opacity = '0.5';
 
                 clearTimeout(hideControlsTimer);
@@ -821,6 +928,7 @@
                     if (isSessionActive) {
                         fc.style.opacity = '0';
                         fc.style.pointerEvents = 'none';
+                        if (bl) bl.style.opacity = '0';
                         if (tracker) tracker.style.opacity = '0';
                         document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active'));
                     }
@@ -830,18 +938,18 @@
         document.addEventListener('mousemove', wakeControls);
         document.addEventListener('touchstart', wakeControls);
 
-        /* TIMER ENGINE (Smooth version) */
+        /* TIMER ENGINE (Robust target-based) */
         let isSessionActive = false;
         let isBreak = false;
         let workDuration = 0;
         let breakDuration = 0;
+        let targetEndTime = 0;
         let timeLeft = 0;
         let smoothProgress = 0;
         let totalLoops = 1;
         let currentLoop = 1;
         let clock = null;
         let currentVisualizer = null;
-        let lastFrameTime = Date.now();
 
         function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
         function promptCancel() { toggleModal('confirm-modal', true); }
@@ -901,9 +1009,8 @@
 
         function startWorkPhase() {
             isBreak = false;
-            timeLeft = workDuration;
+            targetEndTime = Date.now() + (workDuration * 1000);
             smoothProgress = 0;
-            lastFrameTime = Date.now();
             updateTracker();
             document.getElementById('break-screen').classList.add('hidden');
             if (currentVisualizer) currentVisualizer.reset();
@@ -911,19 +1018,21 @@
 
             clearInterval(clock);
             clock = setInterval(tick, 1000);
+            tick();
         }
 
         function startBreakPhase() {
             isBreak = true;
-            timeLeft = breakDuration;
+            targetEndTime = Date.now() + (breakDuration * 1000);
             playChime("Break Time!");
 
             document.getElementById('break-text').innerText = breakMessages[Math.floor(Math.random() * breakMessages.length)];
             document.getElementById('break-screen').classList.remove('hidden');
-            updateBreakDisplay();
+            updateBreakDisplay(breakDuration);
 
             clearInterval(clock);
             clock = setInterval(tick, 1000);
+            tick();
         }
 
         function endBreak() {
@@ -937,16 +1046,18 @@
             }
         }
 
-        // 1-second tick just handles text displays and exact phase transitions
+        // Tick handles phase transitions based on accurate target time
         function tick() {
-            timeLeft--;
+            let now = Date.now();
+            let remaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
+            timeLeft = remaining;
 
             if (isBreak) {
-                updateBreakDisplay();
-                if (timeLeft <= 0) endBreak();
+                updateBreakDisplay(remaining);
+                if (remaining <= 0) endBreak();
             } else {
-                if (timeLeft <= 0) {
-                    if (breakDuration > 0 && currentLoop <= totalLoops) {
+                if (remaining <= 0) {
+                    if (breakDuration > 0 && (currentLoop < totalLoops || totalLoops === Infinity)) {
                         startBreakPhase();
                     } else {
                         currentLoop++;
@@ -961,9 +1072,9 @@
             }
         }
 
-        function updateBreakDisplay() {
-            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            const s = (timeLeft % 60).toString().padStart(2, '0');
+        function updateBreakDisplay(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
             document.getElementById('break-timer-display').innerText = `${m}:${s}`;
         }
 
@@ -984,15 +1095,13 @@
             wakeControls();
         }
 
-        /* CENTRAL RENDERING LOOP (Frame-by-frame smoothness) */
+        /* CENTRAL RENDERING LOOP */
         function globalRenderLoop() {
             let now = Date.now();
-            let dt = (now - lastFrameTime) / 1000;
-            lastFrameTime = now;
 
             if (isSessionActive) {
                 if (!isBreak && workDuration > 0) {
-                    smoothProgress += dt / workDuration;
+                    smoothProgress = 1 - Math.max(0, (targetEndTime - now) / (workDuration * 1000));
                     if (smoothProgress > 1) smoothProgress = 1;
 
                     document.getElementById('universal-progress').style.width = (smoothProgress * 100) + '%';
@@ -1002,14 +1111,12 @@
                         currentVisualizer.draw();
                     }
                 } else if (isBreak) {
-                    // Keep drawing but don't advance progress
                     if (currentVisualizer) currentVisualizer.draw();
                 }
             }
             requestAnimationFrame(globalRenderLoop);
         }
         requestAnimationFrame(globalRenderLoop);
-
 
         /* VISUALIZERS SYSTEM */
         const canvas = document.getElementById('visual-canvas');
@@ -1047,7 +1154,7 @@
             }
             draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.time += 0.02; // Runs smoothly via requestAnimationFrame
+                this.time += 0.02;
                 const colors = getThemeColors();
 
                 const fillHeight = canvas.height * this.progress;
@@ -1090,7 +1197,7 @@
             }
         }
 
-        // 2. JOURNEY (Smooth scrolling)
+        // 2. JOURNEY
         class JourneyVisualizer extends BaseVisualizer {
             constructor() {
                 super();
@@ -1104,7 +1211,6 @@
 
                 const groundY = canvas.height * 0.8;
 
-                // Sky
                 ctx.fillStyle = colors.accent;
                 ctx.globalAlpha = 0.3;
                 this.stars.forEach(s => {
@@ -1113,18 +1219,15 @@
                 });
                 ctx.globalAlpha = 1.0;
 
-                // Solid Ground
                 ctx.fillStyle = colors.accent;
                 ctx.globalAlpha = 0.5;
                 ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
                 ctx.globalAlpha = 1.0;
 
-                // Ground Line
                 ctx.strokeStyle = colors.bar;
                 ctx.lineWidth = 4;
                 ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(canvas.width, groundY); ctx.stroke();
 
-                // Finish Line Flag
                 let finishX = canvas.width * 0.9;
                 ctx.strokeStyle = colors.bar;
                 ctx.lineWidth = 6;
@@ -1139,7 +1242,6 @@
                 ctx.quadraticCurveTo(finishX - 20, groundY - 100 + waveY, finishX, groundY - 90);
                 ctx.fill();
 
-                // Character moves forward perfectly smoothly
                 let startX = canvas.width * 0.1;
                 let charX = startX + (this.progress * (finishX - startX));
 
@@ -1147,7 +1249,6 @@
                 ctx.fillStyle = colors.bar;
                 ctx.fillRect(charX - 10, groundY - 20 - bounce, 20, 20);
 
-                // Trail
                 ctx.fillStyle = colors.accent;
                 for (let i = 0; i < 5; i++) {
                     ctx.fillRect(charX - 10 - (i * 15) - (this.time % 15), groundY - 5 - (Math.random() * 5), 4, 4);
@@ -1155,7 +1256,7 @@
             }
         }
 
-        // 3. WAIST HOURGLASS (Smooth Flow)
+        // 3. WAIST HOURGLASS
         class HourglassVisualizer extends BaseVisualizer {
             constructor() { super(); }
             draw() {
@@ -1204,25 +1305,22 @@
             }
         }
 
-        // 4. TRIPPY FRACTAL (Phyllotaxis / Sunflower Web)
+        // 4. TRIPPY FRACTAL (Phyllotaxis)
         class TrippyFractalVisualizer extends BaseVisualizer {
             constructor() { super(); this.time = 0; }
             draw() {
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.time += 0.01; // Constant slow rotation
+                this.time += 0.01;
 
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
 
-                // Draw more dots as time goes on, up to 2500
                 const maxDots = 2500;
                 const dots = Math.floor(this.progress * maxDots);
 
-                // Scaling factor to fit the screen nicely
                 const c = (Math.min(canvas.width, canvas.height) * 0.45) / Math.sqrt(maxDots);
 
-                // 137.5 is the golden angle in degrees. We add a tiny sine wave for a "breathing" trippy effect
                 const baseAngle = 137.508 * (Math.PI / 180);
                 const dynamicAngle = baseAngle + Math.sin(this.time * 0.5) * 0.0002;
 
@@ -1231,12 +1329,11 @@
 
                 for (let n = 0; n < dots; n++) {
                     let r = c * Math.sqrt(n);
-                    let theta = n * dynamicAngle + (this.time * 0.2); // whole system rotates
+                    let theta = n * dynamicAngle + (this.time * 0.2);
 
                     let x = cx + r * Math.cos(theta);
                     let y = cy + r * Math.sin(theta);
 
-                    // Dots get slightly larger as they go out
                     let size = 1 + (r / 50);
 
                     ctx.beginPath();
@@ -1247,7 +1344,7 @@
             }
         }
 
-        // 5. TETRIS BLOCKS / PHYSICS (Smooth fallback)
+        // 5. TETRIS BLOCKS
         class BlocksVisualizer extends BaseVisualizer {
             constructor() {
                 super();
@@ -1269,7 +1366,6 @@
 
                 let targetBlocks = Math.floor(this.progress * this.maxBlocks);
 
-                // Spawn new blocks
                 while (this.blocks.length < targetBlocks) {
                     let col = Math.floor(Math.random() * this.cols);
                     this.blocks.push({
@@ -1313,33 +1409,33 @@
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 this.time += 0.01;
-                
+
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
                 const maxR = Math.min(cx, cy) * 0.9;
-                
+
                 const maxRings = 30;
                 const rings = Math.floor(this.progress * maxRings);
-                
+
                 ctx.strokeStyle = colors.bar;
                 ctx.lineWidth = 1;
-                
-                for(let i=1; i<=rings; i++) {
+
+                for (let i = 1; i <= rings; i++) {
                     let r = (i / maxRings) * maxR;
-                    let points = 6 + (i % 3) * 6; // 6, 12, or 18 points
-                    
+                    let points = 6 + (i % 3) * 6;
+
                     ctx.save();
                     ctx.translate(cx, cy);
                     let dir = i % 2 === 0 ? 1 : -1;
                     ctx.rotate((this.time * 0.2 * dir) + (i * 0.1));
-                    
+
                     ctx.beginPath();
-                    for(let p=0; p<=points; p++) {
+                    for (let p = 0; p <= points; p++) {
                         let angle = (p / points) * Math.PI * 2;
                         let wobble = Math.sin(this.time * 2 + i) * 5;
                         let x = (r + wobble) * Math.cos(angle);
                         let y = (r + wobble) * Math.sin(angle);
-                        if(p===0) ctx.moveTo(x, y);
+                        if (p === 0) ctx.moveTo(x, y);
                         else ctx.lineTo(x, y);
                     }
                     ctx.closePath();
@@ -1349,37 +1445,39 @@
             }
         }
 
-        // 7. SPIROGRAPH (Hypotrochoid)
+        // 7. SPIROGRAPH (Trippy Tunnel)
         class SpirographVisualizer extends BaseVisualizer {
             constructor() { super(); this.time = 0; }
             draw() {
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 this.time += 0.02;
-                
+
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
-                
-                const R = Math.min(cx, cy) * 0.6;
-                const r = R * 0.28; 
-                const offset = R * 0.6;
-                
-                const maxTheta = 300 * Math.PI;
+
+                const R = Math.min(cx, cy) * 0.7;
+
+                // Morphing r and offset makes it deeply trippy and forms tunnel-like illusions
+                const r = R * (0.2 + Math.sin(this.time * 0.5) * 0.05);
+                const offset = R * (0.5 + Math.cos(this.time * 0.3) * 0.1);
+
+                const maxTheta = 400 * Math.PI;
                 const currentTheta = this.progress * maxTheta;
-                
+
                 ctx.strokeStyle = colors.bar;
-                ctx.lineWidth = 1;
-                
+                ctx.lineWidth = 1.5;
+
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.rotate(this.time * 0.1); 
-                
+                ctx.rotate(this.time * 0.2);
+
                 ctx.beginPath();
-                for(let t=0; t<=currentTheta; t+=0.5) {
+                for (let t = 0; t <= currentTheta; t += 0.5) {
                     let x = (R - r) * Math.cos(t) + offset * Math.cos(((R - r) / r) * t);
                     let y = (R - r) * Math.sin(t) - offset * Math.sin(((R - r) / r) * t);
-                    if(t===0) ctx.moveTo(x,y);
-                    else ctx.lineTo(x,y);
+                    if (t === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
                 ctx.restore();
