@@ -1408,40 +1408,53 @@
             draw() {
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.time += 0.01;
-
+                this.time += 0.02;
+                
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
                 const maxR = Math.min(cx, cy) * 0.9;
-
-                const maxRings = 30;
+                
+                const maxRings = 50;
                 const rings = Math.floor(this.progress * maxRings);
-
+                
                 ctx.strokeStyle = colors.bar;
-                ctx.lineWidth = 1;
-
+                
                 for (let i = 1; i <= rings; i++) {
-                    let r = (i / maxRings) * maxR;
-                    let points = 6 + (i % 3) * 6;
-
+                    let baseR = (i / maxRings) * maxR;
+                    
                     ctx.save();
                     ctx.translate(cx, cy);
+                    
                     let dir = i % 2 === 0 ? 1 : -1;
-                    ctx.rotate((this.time * 0.2 * dir) + (i * 0.1));
-
+                    ctx.rotate((this.time * 0.5 * dir) + (i * 0.1));
+                    
                     ctx.beginPath();
+                    const points = 120; // smooth circle
                     for (let p = 0; p <= points; p++) {
                         let angle = (p / points) * Math.PI * 2;
-                        let wobble = Math.sin(this.time * 2 + i) * 5;
-                        let x = (r + wobble) * Math.cos(angle);
-                        let y = (r + wobble) * Math.sin(angle);
+                        
+                        // The wobble frequency (number of lobes) varies by ring!
+                        let lobes = 3 + (i % 5); 
+                        // Trippy pulsating wave
+                        let wobble = Math.sin(angle * lobes + this.time * 2 * dir) * (baseR * 0.15);
+                        
+                        let r = baseR + wobble;
+                        let x = r * Math.cos(angle);
+                        let y = r * Math.sin(angle);
+                        
                         if (p === 0) ctx.moveTo(x, y);
                         else ctx.lineTo(x, y);
                     }
                     ctx.closePath();
+                    
+                    // Dynamic thickness and opacity for 3D depth
+                    ctx.lineWidth = 1 + Math.abs(Math.sin(this.time * 3 + i)) * 1.5;
+                    ctx.globalAlpha = 0.4 + 0.6 * (i / maxRings);
+                    
                     ctx.stroke();
                     ctx.restore();
                 }
+                ctx.globalAlpha = 1.0;
             }
         }
 
@@ -1456,21 +1469,19 @@
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
 
-                const R = Math.min(cx, cy) * 0.7;
+                const R = Math.min(cx, cy) * 0.6;
+                const r = R * 0.28; 
+                const offset = R * 0.6;
 
-                // Morphing r and offset makes it deeply trippy and forms tunnel-like illusions
-                const r = R * (0.2 + Math.sin(this.time * 0.5) * 0.05);
-                const offset = R * (0.5 + Math.cos(this.time * 0.3) * 0.1);
-
-                const maxTheta = 400 * Math.PI;
+                const maxTheta = 300 * Math.PI;
                 const currentTheta = this.progress * maxTheta;
 
                 ctx.strokeStyle = colors.bar;
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 1;
 
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.rotate(this.time * 0.2);
+                ctx.rotate(this.time * 0.1);
 
                 ctx.beginPath();
                 for (let t = 0; t <= currentTheta; t += 0.5) {
