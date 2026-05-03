@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ambient Timer</title>
+    <link href="assets/css/space-grotesk.css" rel="stylesheet">
+    <link href="assets/css/vt323.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --accent: #333;
+            --bar: #ffffff;
+            --box-bg: rgba(255, 255, 255, 0.02);
+            --toolbar-bg: rgba(18, 18, 18, 0.95);
+            --danger: #ff4757;
+            --font-body: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --font-heading: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --border-w: 1px;
+            --shadow-offset: 0px;
+            --btn-text-transform: none;
+            --heading-size: 2.2rem;
+            --heading-shadow: none;
+            --transition-speed: 0.4s;
+            --pattern-opacity: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            overflow: hidden;
+            transition: background var(--transition-speed), color var(--transition-speed);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
+            background-size: 35px 35px;
+            opacity: var(--pattern-opacity);
+            transition: opacity var(--transition-speed);
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+        .screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            gap: 15px;
+            transition: opacity 0.4s ease;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .setup-box {
+            padding: 40px;
+            border-radius: calc(16px - (var(--border-w) * 2));
+            border: var(--border-w) solid var(--accent);
+            background: var(--box-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-speed);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-weight: normal;
+            letter-spacing: 1px;
+            margin: 0 0 5px 0;
+            font-size: var(--heading-size);
+            text-align: center;
+            text-shadow: var(--heading-shadow);
+            line-height: 1;
+            transition: all var(--transition-speed);
+        }
+
+        .row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.95rem;
+            width: 100%;
+            align-items: flex-start;
+            position: relative;
+            font-weight: bold;
+        }
+
+        .row-inline {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        button,
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            color: var(--text);
+            cursor: pointer;
+            border-radius: calc(8px - var(--border-w));
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            text-transform: var(--btn-text-transform);
+            box-shadow: calc(var(--shadow-offset)*0.5) calc(var(--shadow-offset)*0.5) 0px var(--bar);
+            transition: all 0.2s;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        button:hover,
+        input[type="number"]:focus {
+            transform: translate(-1px, -1px);
+            box-shadow: calc(var(--shadow-offset)*0.7) calc(var(--shadow-offset)*0.7) 0px var(--bar);
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .custom-select {
+            position: relative;
+            width: 100%;
+            font-family: var(--font-body);
+        }
+
+        .select-selected {
+            padding: 12px 16px;
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(8px - var(--border-w));
+            background: var(--bg);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .select-selected:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .select-selected::after {
+            content: '▼';
+            font-size: 0.7rem;
+            opacity: 0.8;
+            transition: transform 0.2s;
+        }
+
+        .custom-select.active .select-selected::after {
+            transform: rotate(180deg);
+        }
+
+        .select-items {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            margin-top: 5px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(8px - var(--border-w));
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+            display: none;
+            transition: all var(--transition-speed);
+        }
+
+        .custom-select.active .select-items {
+            display: block;
+        }
+
+        .select-items div {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--accent);
+            transition: background 0.2s;
+            font-weight: bold;
+        }
+
+        .select-items div:last-child {
+            border-bottom: none;
+        }
+
+        .select-items div:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(4px - var(--border-w));
+            background-color: var(--bg);
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            transition: all 0.2s;
+            box-shadow: calc(var(--shadow-offset)*0.3) calc(var(--shadow-offset)*0.3) 0px var(--bar);
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--bar);
+            border-color: var(--bar);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 2px;
+            width: 6px;
+            height: 12px;
+            border: solid var(--bg);
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+
+        .floating-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+            z-index: 5000;
+            transition: opacity 0.5s ease;
+        }
+
+        .floating-btn {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+            font-size: 0.9rem;
+            pointer-events: auto;
+        }
+
+        .floating-btn:hover {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: var(--border-w) solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            color: var(--text);
+            box-shadow: calc(var(--shadow-offset)*0.3) calc(var(--shadow-offset)*0.3) 0px var(--bar);
+            transition: all var(--transition-speed);
+        }
+
+        .floating-theme-selector {
+            width: 220px;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .floating-theme-selector:hover,
+        .floating-theme-selector.active {
+            opacity: 1;
+        }
+
+        .floating-theme-selector .select-items {
+            max-height: 400px;
+        }
+
+        /* Universal Progress */
+        #universal-progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: transparent;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        #universal-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--bar);
+            transition: width 0.1s linear, background-color var(--transition-speed);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 6000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            padding: 30px;
+            border-radius: calc(12px - var(--border-w));
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            line-height: 1.6;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+        }
+
+        .modal-content h2 {
+            font-family: var(--font-heading);
+            margin-top: 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Break Screen */
+        #break-screen {
+            background: rgba(var(--bg), 0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        #break-text {
+            font-size: 4rem;
+            color: var(--bar);
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        #break-timer-display {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            margin: 0 0 30px 0;
+            opacity: 0.8;
+        }
+
+        #session-tracker {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            opacity: 0.5;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        /* Toasts */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 7000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bar);
+            color: var(--bg);
+            padding: 12px 24px;
+            border-radius: calc(8px - var(--border-w));
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease-out, fadeOut 0.5s ease-in 3s forwards;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .setup-box {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            #break-text {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="bg-music"></audio>
+    <canvas id="visual-canvas"></canvas>
+
+    <div id="toast-container"></div>
+    <div id="universal-progress-container">
+        <div id="universal-progress"></div>
+    </div>
+
+    <div class="floating-controls">
+        <div class="custom-select floating-theme-selector" id="theme-selector" data-target="theme-select">
+            <div class="select-selected" id="theme-display">Sleek Midnight</div>
+            <div class="select-items" id="theme-list"></div>
+        </div>
+        <input type="hidden" id="theme-select" value="zone-night">
+
+        <div style="display:flex; gap:10px;">
+            <div id="shuffle-wrapper" class="floating-btn hidden" onclick="cycleVisualizer()" title="Change Visualizer">
+                <div class="icon-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path
+                            d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div id="mute-wrapper" class="floating-btn" onclick="toggleMute()" title="Toggle Sound & Music">
+                <div class="icon-btn" id="mute-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path
+                            d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div id="cancel-wrapper" class="floating-btn hidden" onclick="promptCancel()" title="Stop Timer">
+                <div class="icon-btn" style="color: var(--danger); border-color: var(--danger);">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="session-tracker" class="hidden">Loop: 1 / 4</div>
+
+    <div id="setup-screen" class="screen">
+        <div class="setup-box">
+            <h1 id="main-title">AMBIENT TIMER</h1>
+
+            <div class="row">
+                <label>Work Duration:</label>
+                <div class="custom-select" data-target="timer-select">
+                    <div class="select-selected">25 Mins</div>
+                    <div class="select-items">
+                        <div data-value="1">1 Min</div>
+                        <div data-value="5">5 Mins</div>
+                        <div data-value="10">10 Mins</div>
+                        <div data-value="25">25 Mins</div>
+                        <div data-value="50">50 Mins</div>
+                        <div data-value="custom">Custom...</div>
+                    </div>
+                </div>
+                <input type="hidden" id="timer-select" value="25">
+                <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 90)" min="1"
+                    style="margin-top: 5px;">
+            </div>
+
+            <div class="row">
+                <label>Break Duration:</label>
+                <div class="custom-select" data-target="break-select">
+                    <div class="select-selected">5 Mins</div>
+                    <div class="select-items">
+                        <div data-value="0">No Breaks</div>
+                        <div data-value="5">5 Mins</div>
+                        <div data-value="10">10 Mins</div>
+                        <div data-value="15">15 Mins</div>
+                        <div data-value="custom">Custom...</div>
+                    </div>
+                </div>
+                <input type="hidden" id="break-select" value="5">
+                <input type="number" id="custom-break" class="hidden" placeholder="Minutes" min="1"
+                    style="margin-top: 5px;">
+            </div>
+
+            <div class="row">
+                <label>Number of Loops:</label>
+                <div class="custom-select" data-target="loops-select">
+                    <div class="select-selected">1 Loop (Just Once)</div>
+                    <div class="select-items">
+                        <div data-value="1">1 Loop (Just Once)</div>
+                        <div data-value="2">2 Loops</div>
+                        <div data-value="3">3 Loops</div>
+                        <div data-value="4">4 Loops</div>
+                        <div data-value="infinite">Infinite Loops</div>
+                    </div>
+                </div>
+                <input type="hidden" id="loops-select" value="1">
+            </div>
+
+            <div class="row-inline" style="margin-top: 5px;">
+                <label for="music-toggle">Play Lofi Playlist</label>
+                <input type="checkbox" id="music-toggle" checked>
+            </div>
+
+            <button onclick="startSession()" style="margin-top: 10px; background: var(--bar); color: var(--bg);">START
+                FOCUS</button>
+        </div>
+    </div>
+
+    <div id="break-screen" class="screen hidden">
+        <h1 id="break-text">Stretch and get some water!</h1>
+        <p id="break-timer-display">05:00</p>
+        <button onclick="endBreak()" style="width: auto; max-width: 200px; opacity: 0.8;">Skip Break</button>
+    </div>
+
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>End Session?</h2>
+            <p>Are you sure you want to cancel the current timer?</p>
+            <div class="modal-buttons">
+                <button onclick="toggleModal('confirm-modal', false)" style="background: var(--bg);">Resume</button>
+                <button onclick="cancelSession()"
+                    style="background: var(--danger); color: white; border-color: var(--danger);">End Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* THEMES CONFIGURATION (Shared with Dangerous Writer) */
+        const themes = {
+            'zone-night': { name: 'Sleek Midnight', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'zone-day': { name: 'Coffee Cozy', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', danger: '#ff4757', headingSize: '2.2rem', patternOpacity: '0' },
+            'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-dark-2': { name: 'Gulaabi Midnight', bg: '#1a0018', text: '#ff4081', accent: '#00e676', bar: '#ffd54f', boxBg: 'rgba(0,0,0,0.5)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-2': { name: 'Morpinch Sea', bg: '#e0f2f1', text: '#00695c', accent: '#fbc02d', bar: '#f48fb1', boxBg: 'rgba(255,255,255,0.8)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-dark-3': { name: 'Morpinch Forest', bg: '#004d40', text: '#fff59d', accent: '#ff7043', bar: '#26a69a', boxBg: 'rgba(0,0,0,0.4)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' },
+            'ind-light-3': { name: 'Gulaabi Rose', bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' }
+        };
+
+        const breakMessages = [
+            "Stretch and get some water!",
+            "Rest your eyes. Look into the distance.",
+            "Take a deep breath. You're doing great.",
+            "Stand up and do a quick stretch.",
+            "Time to reset. Enjoy the stillness."
+        ];
+
+        /* UI & THEME LOGIC */
+        function populateThemeList() {
+            const list = document.getElementById('theme-list');
+            for (const [key, t] of Object.entries(themes)) {
+                const div = document.createElement('div');
+                div.dataset.value = key; div.innerText = t.name;
+                div.style.backgroundColor = t.bg; div.style.color = t.text;
+                div.style.borderBottom = `2px solid ${t.accent}`;
+                div.addEventListener('click', () => {
+                    document.getElementById('theme-display').innerText = t.name;
+                    document.getElementById('theme-select').value = key;
+                    applyTheme(key);
+                    document.getElementById('theme-selector').classList.remove('active');
+                });
+                list.appendChild(div);
+            }
+        }
+
+        function applyTheme(themeKey) {
+            const t = themes[themeKey];
+            if (!t) return;
+            const root = document.documentElement;
+            root.style.setProperty('--bg', t.bg);
+            root.style.setProperty('--text', t.text);
+            root.style.setProperty('--accent', t.accent);
+            root.style.setProperty('--bar', t.bar);
+            root.style.setProperty('--box-bg', t.boxBg);
+            root.style.setProperty('--font-body', t.fontBody);
+            root.style.setProperty('--font-heading', t.fontHeading);
+            root.style.setProperty('--border-w', t.borderW);
+            root.style.setProperty('--shadow-offset', t.shadowW);
+            root.style.setProperty('--btn-text-transform', t.btnTransform);
+            root.style.setProperty('--danger', t.danger);
+            root.style.setProperty('--heading-size', t.headingSize);
+            root.style.setProperty('--pattern-opacity', t.patternOpacity);
+            root.style.setProperty('--heading-shadow', t.shadowW === '0px' ? 'none' : `3px 3px ${t.bar}`);
+            savePreferences();
+        }
+
+        function initCustomSelects() {
+            document.querySelectorAll('.custom-select').forEach(customSelect => {
+                if (customSelect.id === 'theme-selector') return;
+                const selected = customSelect.querySelector('.select-selected');
+                const itemsList = customSelect.querySelector('.select-items');
+                const hiddenInput = document.getElementById(customSelect.dataset.target);
+
+                selected.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.custom-select').forEach(el => { if (el !== customSelect) el.classList.remove('active'); });
+                    customSelect.classList.toggle('active');
+                });
+
+                itemsList.querySelectorAll('div').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selected.innerText = item.innerText;
+                        hiddenInput.value = item.dataset.value;
+                        customSelect.classList.remove('active');
+                        if (hiddenInput.id === 'timer-select') {
+                            document.getElementById('custom-time').classList.toggle('hidden', hiddenInput.value !== 'custom');
+                        }
+                        if (hiddenInput.id === 'break-select') {
+                            document.getElementById('custom-break').classList.toggle('hidden', hiddenInput.value !== 'custom');
+                        }
+                    });
+                });
+            });
+
+            const themeSel = document.getElementById('theme-selector');
+            themeSel.querySelector('.select-selected').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select').forEach(el => { if (el !== themeSel) el.classList.remove('active'); });
+                themeSel.classList.toggle('active');
+            });
+            document.addEventListener('click', () => { document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active')); });
+        }
+
+        function setCustomSelectValue(targetId, value, selectId = null, displayId = null) {
+            const hiddenInput = document.getElementById(targetId);
+            const customSelect = document.getElementById(selectId) || document.querySelector(`.custom-select[data-target="${targetId}"]`);
+            if (!customSelect || !hiddenInput) return;
+            const targetItem = customSelect.querySelector(`.select-items div[data-value="${value}"]`);
+            if (targetItem) {
+                if (displayId) document.getElementById(displayId).innerText = targetItem.innerText;
+                else customSelect.querySelector('.select-selected').innerText = targetItem.innerText;
+                hiddenInput.value = value;
+            }
+        }
+
+        function savePreferences() {
+            const prefs = {
+                timer: document.getElementById('timer-select').value,
+                break: document.getElementById('break-select').value,
+                loops: document.getElementById('loops-select').value,
+                music: document.getElementById('music-toggle').checked,
+                theme: document.getElementById('theme-select').value
+            };
+            localStorage.setItem('ambientTimerPrefs', JSON.stringify(prefs));
+
+            let unified = localStorage.getItem('unifiedWriterPrefs');
+            if (unified) {
+                let p = JSON.parse(unified);
+                p.theme = document.getElementById('theme-select').value;
+                localStorage.setItem('unifiedWriterPrefs', JSON.stringify(p));
+            }
+        }
+
+        function loadPreferences() {
+            const savedPrefs = localStorage.getItem('ambientTimerPrefs') || localStorage.getItem('unifiedWriterPrefs');
+            if (savedPrefs) {
+                const prefs = JSON.parse(savedPrefs);
+                if (prefs.timer && document.querySelector(`#timer-select ~ .select-items div[data-value="${prefs.timer}"]`)) setCustomSelectValue('timer-select', prefs.timer);
+                if (prefs.break && document.querySelector(`#break-select ~ .select-items div[data-value="${prefs.break}"]`)) setCustomSelectValue('break-select', prefs.break);
+                if (prefs.loops) setCustomSelectValue('loops-select', prefs.loops);
+                if (prefs.music !== undefined) document.getElementById('music-toggle').checked = prefs.music;
+
+                const savedTheme = prefs.theme || 'zone-night';
+                setCustomSelectValue('theme-select', savedTheme, 'theme-selector', 'theme-display');
+                applyTheme(savedTheme);
+            } else {
+                applyTheme('zone-night');
+            }
+        }
+
+        /* AUDIO & NOTIFICATIONS */
+        let isMuted = false;
+        const playlist = ['assets/music/audio1.mp3', 'assets/music/audio2.mp3'];
+        let currentTrackIndex = 0;
+        const musicPlayer = document.getElementById('bg-music');
+        musicPlayer.addEventListener('ended', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            musicPlayer.src = playlist[currentTrackIndex];
+            musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+        });
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('mute-icon');
+            const volUpSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+            const volOffSVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;
+
+            if (isMuted) {
+                musicPlayer.muted = true;
+                icon.innerHTML = volOffSVG;
+            } else {
+                musicPlayer.muted = false;
+                icon.innerHTML = volUpSVG;
+            }
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { if (container.contains(toast)) container.removeChild(toast); }, 4000);
+        }
+
+        function playChime(message) {
+            if (isMuted) {
+                showToast(message);
+                return;
+            }
+
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(277.18, ctx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1500, ctx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.5);
+
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+
+            osc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            osc.start();
+            osc.stop(ctx.currentTime + 1.5);
+
+            showToast(message);
+        }
+
+        /* WAKE CONTROLS */
+        let hideControlsTimer;
+        function wakeControls() {
+            const fc = document.querySelector('.floating-controls');
+            const tracker = document.getElementById('session-tracker');
+            if (fc) {
+                fc.style.opacity = '1';
+                fc.style.pointerEvents = 'auto';
+                if (tracker && isSessionActive) tracker.style.opacity = '0.5';
+
+                clearTimeout(hideControlsTimer);
+                hideControlsTimer = setTimeout(() => {
+                    if (isSessionActive) {
+                        fc.style.opacity = '0';
+                        fc.style.pointerEvents = 'none';
+                        if (tracker) tracker.style.opacity = '0';
+                        document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active'));
+                    }
+                }, 3000);
+            }
+        }
+        document.addEventListener('mousemove', wakeControls);
+        document.addEventListener('touchstart', wakeControls);
+
+        /* TIMER ENGINE (Smooth version) */
+        let isSessionActive = false;
+        let isBreak = false;
+        let workDuration = 0;
+        let breakDuration = 0;
+        let timeLeft = 0;
+        let smoothProgress = 0;
+        let totalLoops = 1;
+        let currentLoop = 1;
+        let clock = null;
+        let currentVisualizer = null;
+        let lastFrameTime = Date.now();
+
+        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
+        function promptCancel() { toggleModal('confirm-modal', true); }
+        function cancelSession() { toggleModal('confirm-modal', false); endSession(); }
+
+        window.addEventListener('beforeunload', (e) => {
+            if (isSessionActive) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        function startSession() {
+            const workVal = document.getElementById('timer-select').value;
+            const wMins = workVal === 'custom' ? document.getElementById('custom-time').value : workVal;
+            const breakVal = document.getElementById('break-select').value;
+            const bMins = breakVal === 'custom' ? document.getElementById('custom-break').value : breakVal;
+            const loopsVal = document.getElementById('loops-select').value;
+
+            if (!wMins || wMins <= 0) return alert("Please enter a valid work duration.");
+
+            savePreferences();
+
+            if (!isMuted && document.getElementById('music-toggle').checked) {
+                if (!musicPlayer.src || musicPlayer.paused) {
+                    musicPlayer.src = playlist[currentTrackIndex];
+                    musicPlayer.volume = 0.5;
+                    musicPlayer.play().catch(e => console.log("Audio play blocked.", e));
+                }
+            } else {
+                musicPlayer.pause();
+            }
+
+            workDuration = parseFloat(wMins) * 60;
+            breakDuration = parseFloat(bMins || 0) * 60;
+            totalLoops = loopsVal === 'infinite' ? Infinity : parseInt(loopsVal);
+            currentLoop = 1;
+
+            if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => { });
+            }
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('cancel-wrapper').classList.remove('hidden');
+            document.getElementById('shuffle-wrapper').classList.remove('hidden');
+            document.getElementById('session-tracker').classList.remove('hidden');
+            document.getElementById('universal-progress-container').style.opacity = '1';
+
+            isSessionActive = true;
+
+            if (!currentVisualizer) cycleVisualizer();
+            startWorkPhase();
+        }
+
+        function updateTracker() {
+            const tracker = document.getElementById('session-tracker');
+            const loopText = totalLoops === Infinity ? '∞' : totalLoops;
+            tracker.innerText = `Loop: ${currentLoop} / ${loopText}`;
+        }
+
+        function startWorkPhase() {
+            isBreak = false;
+            timeLeft = workDuration;
+            smoothProgress = 0;
+            lastFrameTime = Date.now();
+            updateTracker();
+            document.getElementById('break-screen').classList.add('hidden');
+            if (currentVisualizer) currentVisualizer.reset();
+            wakeControls();
+
+            clearInterval(clock);
+            clock = setInterval(tick, 1000);
+        }
+
+        function startBreakPhase() {
+            isBreak = true;
+            timeLeft = breakDuration;
+            playChime("Break Time!");
+
+            document.getElementById('break-text').innerText = breakMessages[Math.floor(Math.random() * breakMessages.length)];
+            document.getElementById('break-screen').classList.remove('hidden');
+            updateBreakDisplay();
+
+            clearInterval(clock);
+            clock = setInterval(tick, 1000);
+        }
+
+        function endBreak() {
+            currentLoop++;
+            if (currentLoop > totalLoops) {
+                playChime("Session Complete!");
+                endSession();
+            } else {
+                playChime("Back to Focus!");
+                startWorkPhase();
+            }
+        }
+
+        // 1-second tick just handles text displays and exact phase transitions
+        function tick() {
+            timeLeft--;
+
+            if (isBreak) {
+                updateBreakDisplay();
+                if (timeLeft <= 0) endBreak();
+            } else {
+                if (timeLeft <= 0) {
+                    if (breakDuration > 0 && currentLoop <= totalLoops) {
+                        startBreakPhase();
+                    } else {
+                        currentLoop++;
+                        if (currentLoop > totalLoops) {
+                            playChime("Session Complete!");
+                            endSession();
+                        } else {
+                            startWorkPhase();
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateBreakDisplay() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('break-timer-display').innerText = `${m}:${s}`;
+        }
+
+        function endSession() {
+            isSessionActive = false;
+            clearInterval(clock);
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('break-screen').classList.add('hidden');
+            document.getElementById('cancel-wrapper').classList.add('hidden');
+            document.getElementById('shuffle-wrapper').classList.add('hidden');
+            document.getElementById('session-tracker').classList.add('hidden');
+            document.getElementById('universal-progress-container').style.opacity = '0';
+            document.getElementById('universal-progress').style.width = '0%';
+
+            const canvas = document.getElementById('visual-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            wakeControls();
+        }
+
+        /* CENTRAL RENDERING LOOP (Frame-by-frame smoothness) */
+        function globalRenderLoop() {
+            let now = Date.now();
+            let dt = (now - lastFrameTime) / 1000;
+            lastFrameTime = now;
+
+            if (isSessionActive) {
+                if (!isBreak && workDuration > 0) {
+                    smoothProgress += dt / workDuration;
+                    if (smoothProgress > 1) smoothProgress = 1;
+
+                    document.getElementById('universal-progress').style.width = (smoothProgress * 100) + '%';
+
+                    if (currentVisualizer) {
+                        currentVisualizer.update(smoothProgress);
+                        currentVisualizer.draw();
+                    }
+                } else if (isBreak) {
+                    // Keep drawing but don't advance progress
+                    if (currentVisualizer) currentVisualizer.draw();
+                }
+            }
+            requestAnimationFrame(globalRenderLoop);
+        }
+        requestAnimationFrame(globalRenderLoop);
+
+
+        /* VISUALIZERS SYSTEM */
+        const canvas = document.getElementById('visual-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (currentVisualizer && currentVisualizer.draw) currentVisualizer.draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function getThemeColors() {
+            const rootStyle = getComputedStyle(document.documentElement);
+            return {
+                bg: rootStyle.getPropertyValue('--bg').trim(),
+                accent: rootStyle.getPropertyValue('--accent').trim(),
+                bar: rootStyle.getPropertyValue('--bar').trim()
+            };
+        }
+
+        class BaseVisualizer {
+            constructor() { this.progress = 0; }
+            reset() { this.progress = 0; }
+            update(p) { this.progress = p; }
+            draw() { }
+        }
+
+        // 1. LIQUID FLOW
+        class LiquidVisualizer extends BaseVisualizer {
+            constructor() {
+                super();
+                this.time = 0;
+                this.particles = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), speed: 0.002 + Math.random() * 0.004, size: 2 + Math.random() * 5 }));
+            }
+            draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.time += 0.02; // Runs smoothly via requestAnimationFrame
+                const colors = getThemeColors();
+
+                const fillHeight = canvas.height * this.progress;
+                const topY = canvas.height - fillHeight;
+
+                ctx.fillStyle = colors.accent;
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                for (let x = 0; x <= canvas.width; x += 20) {
+                    ctx.lineTo(x, topY + Math.sin(x * 0.01 + this.time) * 20);
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.fill();
+
+                ctx.globalAlpha = 1.0;
+                let gradient = ctx.createLinearGradient(0, topY, 0, canvas.height);
+                gradient.addColorStop(0, colors.bar);
+                gradient.addColorStop(1, colors.accent);
+                ctx.fillStyle = gradient;
+
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                for (let x = 0; x <= canvas.width; x += 20) {
+                    ctx.lineTo(x, topY + Math.sin(x * 0.01 + this.time + Math.PI) * 15);
+                }
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.fill();
+
+                ctx.fillStyle = colors.bg;
+                this.particles.forEach(p => {
+                    p.y -= p.speed;
+                    if (p.y < 0) p.y = 1;
+                    let px = p.x * canvas.width;
+                    let py = topY + p.y * fillHeight;
+                    if (py > topY + 15) {
+                        ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2); ctx.fill();
+                    }
+                });
+            }
+        }
+
+        // 2. JOURNEY (Smooth scrolling)
+        class JourneyVisualizer extends BaseVisualizer {
+            constructor() {
+                super();
+                this.time = 0;
+                this.stars = Array.from({ length: 80 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, s: Math.random() * 2 }));
+            }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.time += 2;
+
+                const groundY = canvas.height * 0.8;
+
+                // Sky
+                ctx.fillStyle = colors.accent;
+                ctx.globalAlpha = 0.3;
+                this.stars.forEach(s => {
+                    s.x -= 0.1; if (s.x < 0) s.x = canvas.width;
+                    ctx.fillRect(s.x, s.y, s.s, s.s);
+                });
+                ctx.globalAlpha = 1.0;
+
+                // Solid Ground
+                ctx.fillStyle = colors.accent;
+                ctx.globalAlpha = 0.5;
+                ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+                ctx.globalAlpha = 1.0;
+
+                // Ground Line
+                ctx.strokeStyle = colors.bar;
+                ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(canvas.width, groundY); ctx.stroke();
+
+                // Finish Line Flag
+                let finishX = canvas.width * 0.9;
+                ctx.strokeStyle = colors.bar;
+                ctx.lineWidth = 6;
+                ctx.beginPath(); ctx.moveTo(finishX, groundY); ctx.lineTo(finishX, groundY - 120); ctx.stroke();
+
+                ctx.fillStyle = colors.accent;
+                let waveY = Math.sin(this.time * 0.1) * 5;
+                ctx.beginPath();
+                ctx.moveTo(finishX, groundY - 120);
+                ctx.quadraticCurveTo(finishX - 20, groundY - 130 + waveY, finishX - 50, groundY - 110 + waveY);
+                ctx.lineTo(finishX - 50, groundY - 80 + waveY);
+                ctx.quadraticCurveTo(finishX - 20, groundY - 100 + waveY, finishX, groundY - 90);
+                ctx.fill();
+
+                // Character moves forward perfectly smoothly
+                let startX = canvas.width * 0.1;
+                let charX = startX + (this.progress * (finishX - startX));
+
+                let bounce = Math.abs(Math.sin(this.time * 0.15)) * 12;
+                ctx.fillStyle = colors.bar;
+                ctx.fillRect(charX - 10, groundY - 20 - bounce, 20, 20);
+
+                // Trail
+                ctx.fillStyle = colors.accent;
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillRect(charX - 10 - (i * 15) - (this.time % 15), groundY - 5 - (Math.random() * 5), 4, 4);
+                }
+            }
+        }
+
+        // 3. WAIST HOURGLASS (Smooth Flow)
+        class HourglassVisualizer extends BaseVisualizer {
+            constructor() { super(); }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const w = Math.min(canvas.width * 0.5, 200);
+                const h = Math.min(canvas.height * 0.4, 250);
+                const neck = 10;
+
+                ctx.beginPath();
+                ctx.moveTo(cx - w / 2, cy - h);
+                ctx.lineTo(cx + w / 2, cy - h);
+                ctx.lineTo(cx + neck, cy - neck);
+                ctx.lineTo(cx + w / 2, cy + h);
+                ctx.lineTo(cx - w / 2, cy + h);
+                ctx.lineTo(cx - neck, cy + neck);
+                ctx.closePath();
+
+                ctx.save();
+                ctx.clip();
+
+                const sandMaxHeight = h - 4;
+                const topSandHeight = sandMaxHeight * (1 - this.progress);
+                const bottomSandHeight = sandMaxHeight * this.progress;
+
+                ctx.fillStyle = colors.bar;
+
+                if (topSandHeight > 0) ctx.fillRect(cx - w / 2, cy - neck - topSandHeight, w, topSandHeight);
+                if (bottomSandHeight > 0) ctx.fillRect(cx - w / 2, cy + h - bottomSandHeight, w, bottomSandHeight);
+
+                if (!isBreak && this.progress < 1) {
+                    ctx.fillRect(cx - 2, cy - neck, 4, h - bottomSandHeight + 20);
+                    for (let i = 0; i < 8; i++) {
+                        ctx.fillRect(cx - 8 + Math.random() * 16, cy + Math.random() * (h - bottomSandHeight), 3, 3);
+                    }
+                }
+                ctx.restore();
+
+                ctx.strokeStyle = colors.accent;
+                ctx.lineWidth = 6;
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+        }
+
+        // 4. TRIPPY FRACTAL (Phyllotaxis / Sunflower Web)
+        class TrippyFractalVisualizer extends BaseVisualizer {
+            constructor() { super(); this.time = 0; }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.time += 0.01; // Constant slow rotation
+
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+
+                // Draw more dots as time goes on, up to 2500
+                const maxDots = 2500;
+                const dots = Math.floor(this.progress * maxDots);
+
+                // Scaling factor to fit the screen nicely
+                const c = (Math.min(canvas.width, canvas.height) * 0.45) / Math.sqrt(maxDots);
+
+                // 137.5 is the golden angle in degrees. We add a tiny sine wave for a "breathing" trippy effect
+                const baseAngle = 137.508 * (Math.PI / 180);
+                const dynamicAngle = baseAngle + Math.sin(this.time * 0.5) * 0.0002;
+
+                ctx.fillStyle = colors.bar;
+                ctx.globalAlpha = 0.8;
+
+                for (let n = 0; n < dots; n++) {
+                    let r = c * Math.sqrt(n);
+                    let theta = n * dynamicAngle + (this.time * 0.2); // whole system rotates
+
+                    let x = cx + r * Math.cos(theta);
+                    let y = cy + r * Math.sin(theta);
+
+                    // Dots get slightly larger as they go out
+                    let size = 1 + (r / 50);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // 5. TETRIS BLOCKS / PHYSICS (Smooth fallback)
+        class BlocksVisualizer extends BaseVisualizer {
+            constructor() {
+                super();
+                this.blocks = [];
+                this.blockSize = 30;
+                this.cols = Math.ceil(window.innerWidth / this.blockSize);
+                this.rows = Math.ceil(window.innerHeight / this.blockSize);
+                this.maxBlocks = this.cols * this.rows;
+                this.colHeights = new Array(this.cols).fill(window.innerHeight);
+            }
+            reset() {
+                super.reset();
+                this.blocks = [];
+                this.colHeights = new Array(this.cols).fill(window.innerHeight);
+            }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                let targetBlocks = Math.floor(this.progress * this.maxBlocks);
+
+                // Spawn new blocks
+                while (this.blocks.length < targetBlocks) {
+                    let col = Math.floor(Math.random() * this.cols);
+                    this.blocks.push({
+                        x: col * this.blockSize,
+                        y: -this.blockSize - (Math.random() * 200),
+                        col: col,
+                        vy: 4 + Math.random() * 8,
+                        settled: false,
+                        angle: (Math.random() - 0.5) * 0.2
+                    });
+                }
+
+                ctx.fillStyle = colors.bar;
+                ctx.strokeStyle = colors.bg;
+                ctx.lineWidth = 2;
+
+                this.blocks.forEach(b => {
+                    if (!b.settled) {
+                        b.y += b.vy;
+                        let floor = this.colHeights[b.col];
+                        if (b.y + this.blockSize >= floor) {
+                            b.y = floor - this.blockSize;
+                            b.settled = true;
+                            this.colHeights[b.col] = b.y;
+                        }
+                    }
+
+                    ctx.save();
+                    ctx.translate(b.x + this.blockSize / 2, b.y + this.blockSize / 2);
+                    if (b.settled) ctx.rotate(b.angle);
+                    ctx.fillRect(-this.blockSize / 2 + 1, -this.blockSize / 2 + 1, this.blockSize - 2, this.blockSize - 2);
+                    ctx.restore();
+                });
+            }
+        }
+
+        // 6. MANDALA (Kaleidoscope)
+        class MandalaVisualizer extends BaseVisualizer {
+            constructor() { super(); this.time = 0; }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.time += 0.01;
+                
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const maxR = Math.min(cx, cy) * 0.9;
+                
+                const maxRings = 30;
+                const rings = Math.floor(this.progress * maxRings);
+                
+                ctx.strokeStyle = colors.bar;
+                ctx.lineWidth = 1;
+                
+                for(let i=1; i<=rings; i++) {
+                    let r = (i / maxRings) * maxR;
+                    let points = 6 + (i % 3) * 6; // 6, 12, or 18 points
+                    
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    let dir = i % 2 === 0 ? 1 : -1;
+                    ctx.rotate((this.time * 0.2 * dir) + (i * 0.1));
+                    
+                    ctx.beginPath();
+                    for(let p=0; p<=points; p++) {
+                        let angle = (p / points) * Math.PI * 2;
+                        let wobble = Math.sin(this.time * 2 + i) * 5;
+                        let x = (r + wobble) * Math.cos(angle);
+                        let y = (r + wobble) * Math.sin(angle);
+                        if(p===0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        }
+
+        // 7. SPIROGRAPH (Hypotrochoid)
+        class SpirographVisualizer extends BaseVisualizer {
+            constructor() { super(); this.time = 0; }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.time += 0.02;
+                
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                
+                const R = Math.min(cx, cy) * 0.6;
+                const r = R * 0.28; 
+                const offset = R * 0.6;
+                
+                const maxTheta = 300 * Math.PI;
+                const currentTheta = this.progress * maxTheta;
+                
+                ctx.strokeStyle = colors.bar;
+                ctx.lineWidth = 1;
+                
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(this.time * 0.1); 
+                
+                ctx.beginPath();
+                for(let t=0; t<=currentTheta; t+=0.5) {
+                    let x = (R - r) * Math.cos(t) + offset * Math.cos(((R - r) / r) * t);
+                    let y = (R - r) * Math.sin(t) - offset * Math.sin(((R - r) / r) * t);
+                    if(t===0) ctx.moveTo(x,y);
+                    else ctx.lineTo(x,y);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        const renderers = [LiquidVisualizer, JourneyVisualizer, HourglassVisualizer, TrippyFractalVisualizer, BlocksVisualizer, MandalaVisualizer, SpirographVisualizer];
+        let currentVisIndex = 0;
+
+        function cycleVisualizer() {
+            currentVisIndex = (currentVisIndex + 1) % renderers.length;
+            const VisClass = renderers[currentVisIndex];
+            currentVisualizer = new VisClass();
+            resizeCanvas();
+        }
+
+        /* INIT */
+        document.addEventListener('DOMContentLoaded', () => {
+            populateThemeList();
+            initCustomSelects();
+            loadPreferences();
+            resizeCanvas();
+
+            currentVisIndex = Math.floor(Math.random() * renderers.length);
+            const VisClass = renderers[currentVisIndex];
+            currentVisualizer = new VisClass();
+        });
+
+    </script>
+</body>
+
+</html>
