@@ -319,10 +319,22 @@
             'ind-light-3': { name: 'Gulaabi Rose', bg: '#fce4ec', text: '#880e4f', accent: '#9e9d24', bar: '#ff9800', boxBg: 'rgba(255,255,255,0.8)', toolbarBg: 'rgba(252,228,236,0.95)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', danger: '#d50000', headingSize: '2.2rem', patternOpacity: '0.15' }
         };
 
+        function getLuminance(hex) {
+            const rgb = hex.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16));
+            return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+        }
+
         function populateThemeList() {
             const list = document.getElementById('theme-list');
             list.innerHTML = '';
-            for (const [key, t] of Object.entries(themes)) {
+
+            const sortedThemes = Object.entries(themes).sort((a, b) => {
+                const lumA = getLuminance(a[1].bg);
+                const lumB = getLuminance(b[1].bg);
+                return lumB - lumA; // Lightest first
+            });
+
+            for (const [key, t] of sortedThemes) {
                 const div = document.createElement('div');
                 div.dataset.value = key;
                 div.innerText = t.name;

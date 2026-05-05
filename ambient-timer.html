@@ -402,8 +402,13 @@
             font-size: 4rem;
             color: var(--bar);
             max-width: 800px;
-            padding: 20px;
+            padding: 40px;
             text-align: center;
+            background: var(--box-bg);
+            backdrop-filter: blur(10px);
+            border-radius: calc(24px - var(--border-w));
+            border: var(--border-w) solid var(--accent);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
         }
 
         #break-timer-display {
@@ -423,6 +428,119 @@
             z-index: 2000;
             transition: opacity 0.5s ease;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        #digital-clock {
+            position: fixed;
+            bottom: 75px;
+            left: 20px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--bar);
+            z-index: 2000;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            user-select: none;
+        }
+
+        #digital-clock:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+        }
+
+        #digital-clock.large {
+            bottom: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(4rem, 15vw, 12rem);
+            padding: 20px 40px;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.3);
+            font-family: var(--font-heading);
+        }
+
+        .clock-close {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+            padding: 5px;
+            width: auto;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #digital-clock:hover .clock-close {
+            opacity: 1;
+        }
+
+        .clock-close:hover {
+            color: var(--danger);
+            transform: scale(1.2);
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .stats-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--box-bg);
+            border: var(--border-w) solid var(--accent);
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+            height: 60px;
+            align-items: flex-end;
+        }
+
+        .stats-bar {
+            background: var(--bar);
+            opacity: 0.3;
+            width: 100%;
+            border-radius: 2px 2px 0 0;
+            position: relative;
+        }
+
+        .stats-bar:hover {
+            opacity: 0.8;
+        }
+
+        .stats-day {
+            font-size: 0.6rem;
+            text-align: center;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .pattern-hint {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 5px;
+            font-style: italic;
         }
 
         /* Toasts */
@@ -531,6 +649,14 @@
         <input type="hidden" id="theme-select" value="zone-night">
 
         <div style="display:flex; gap:10px;">
+            <div id="restore-clock-wrapper" class="floating-btn hidden" onclick="toggleClock(true)" title="Show Clock">
+                <div class="icon-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                </div>
+            </div>
+
             <div id="shuffle-wrapper" class="floating-btn hidden" onclick="cycleVisualizer()" title="Change Visualizer">
                 <div class="icon-btn">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -565,7 +691,14 @@
         <button class="floating-btn" onclick="toggleModal('credits-modal', true)">Credits</button>
     </div>
 
-    <div id="session-tracker" class="hidden">Loop: 1 / 4</div>
+    <div id="digital-clock" class="hidden" onclick="cycleClockMode()">
+        <span id="clock-display-text">00:00</span>
+        <button class="clock-close" onclick="toggleClock(false, event)" title="Hide Clock">&times;</button>
+    </div>
+    <div id="session-tracker" class="hidden">
+        <div id="loop-indicator">Loop: 1 / 4</div>
+        <div class="pattern-hint">Full screen pattern = time's up</div>
+    </div>
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
@@ -616,10 +749,15 @@
                         <div data-value="3">3 Loops</div>
                         <div data-value="4">4 Loops</div>
                         <div data-value="infinite">Infinite Loops</div>
+                        <div data-value="custom">Custom...</div>
                     </div>
                 </div>
                 <input type="hidden" id="loops-select" value="1">
+                <input type="number" id="custom-loops" class="hidden" placeholder="Number of Loops" min="1"
+                    style="margin-top: 5px;">
             </div>
+
+            <input type="hidden" id="clock-mode" value="small">
 
             <div class="row-inline" style="margin-top: 5px;">
                 <label for="music-toggle">Play Lofi Playlist</label>
@@ -660,6 +798,16 @@
             <h2>Ambient Timer</h2>
             <p>An offline-first, aesthetic visual timer designed for deep focus. Customize your durations, pick a theme,
                 and watch time pass through procedural visuals rather than a stressful ticking clock.</p>
+            
+            <div class="stats-box">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:1rem;">Last 7 Days Focus</h3>
+                    <button onclick="resetStats()" style="width:auto; padding:4px 8px; font-size:0.7rem; background:var(--danger); color:white; border:none; box-shadow:none;">Clear</button>
+                </div>
+                <div id="stats-container" class="stats-grid"></div>
+                <div id="stats-labels" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px;"></div>
+                <p id="total-focus-time" style="margin:10px 0 0 0; font-size:0.8rem; opacity:0.7;">Total: 0h 0m</p>
+            </div>
         </div>
     </div>
 
@@ -693,9 +841,22 @@
         ];
 
         /* UI & THEME LOGIC */
+        function getLuminance(hex) {
+            const rgb = hex.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16));
+            return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+        }
+
         function populateThemeList() {
             const list = document.getElementById('theme-list');
-            for (const [key, t] of Object.entries(themes)) {
+            list.innerHTML = ''; // Clear existing
+
+            const sortedThemes = Object.entries(themes).sort((a, b) => {
+                const lumA = getLuminance(a[1].bg);
+                const lumB = getLuminance(b[1].bg);
+                return lumB - lumA; // Lightest first
+            });
+
+            for (const [key, t] of sortedThemes) {
                 const div = document.createElement('div');
                 div.dataset.value = key; div.innerText = t.name;
                 div.style.backgroundColor = t.bg; div.style.color = t.text;
@@ -755,6 +916,9 @@
                         if (hiddenInput.id === 'break-select') {
                             document.getElementById('custom-break').classList.toggle('hidden', hiddenInput.value !== 'custom');
                         }
+                        if (hiddenInput.id === 'loops-select') {
+                            document.getElementById('custom-loops').classList.toggle('hidden', hiddenInput.value !== 'custom');
+                        }
                     });
                 });
             });
@@ -783,17 +947,19 @@
         function savePreferences() {
             const workVal = document.getElementById('timer-select').value;
             const breakVal = document.getElementById('break-select').value;
+            const loopsVal = document.getElementById('loops-select').value;
 
             const prefs = {
                 timer: workVal === 'custom' ? document.getElementById('custom-time').value : workVal,
                 break: breakVal === 'custom' ? document.getElementById('custom-break').value : breakVal,
-                loops: document.getElementById('loops-select').value,
+                loops: loopsVal === 'custom' ? document.getElementById('custom-loops').value : loopsVal,
                 music: document.getElementById('music-toggle').checked,
                 chime: document.getElementById('chime-toggle').checked,
+                clockMode: document.getElementById('clock-mode').value,
                 theme: document.getElementById('theme-select').value
             };
             localStorage.setItem('ambientTimerPrefs', JSON.stringify(prefs));
-
+            
             let unified = localStorage.getItem('unifiedWriterPrefs');
             if (unified) {
                 let p = JSON.parse(unified);
@@ -829,9 +995,27 @@
                     }
                 }
 
-                if (prefs.loops) setCustomSelectValue('loops-select', prefs.loops);
+                // Load loops robustly
+                if (prefs.loops) {
+                    if (document.querySelector(`#loops-select ~ .select-items div[data-value="${prefs.loops}"]`)) {
+                        setCustomSelectValue('loops-select', prefs.loops);
+                    } else {
+                        setCustomSelectValue('loops-select', 'custom');
+                        document.getElementById('custom-loops').value = prefs.loops;
+                        document.getElementById('custom-loops').classList.remove('hidden');
+                    }
+                }
+
                 if (prefs.music !== undefined) document.getElementById('music-toggle').checked = prefs.music;
                 if (prefs.chime !== undefined) document.getElementById('chime-toggle').checked = prefs.chime;
+                
+                if (prefs.clockMode) {
+                    document.getElementById('clock-mode').value = prefs.clockMode;
+                } else if (prefs.clock !== undefined) {
+                    document.getElementById('clock-mode').value = prefs.clock ? 'small' : 'hidden';
+                } else {
+                    document.getElementById('clock-mode').value = 'small';
+                }
 
                 const savedTheme = prefs.theme || 'zone-night';
                 setCustomSelectValue('theme-select', savedTheme, 'theme-selector', 'theme-display');
@@ -839,11 +1023,71 @@
             } else {
                 applyTheme('zone-night');
             }
+            renderStats();
+        }
+
+        /* FOCUS TRACKING */
+        function recordFocusTime(minutes) {
+            const stats = JSON.parse(localStorage.getItem('focusStats') || '{}');
+            const today = new Date().toISOString().split('T')[0];
+            stats[today] = (stats[today] || 0) + minutes;
+            localStorage.setItem('focusStats', JSON.stringify(stats));
+            renderStats();
+        }
+
+        function resetStats() {
+            if (confirm("Reset all focus statistics?")) {
+                localStorage.removeItem('focusStats');
+                renderStats();
+            }
+        }
+
+        function renderStats() {
+            const stats = JSON.parse(localStorage.getItem('focusStats') || '{}');
+            const container = document.getElementById('stats-container');
+            const labels = document.getElementById('stats-labels');
+            const totalText = document.getElementById('total-focus-time');
+            if (!container || !labels) return;
+
+            container.innerHTML = '';
+            labels.innerHTML = '';
+
+            const days = [];
+            let maxMin = 60; // minimum scale of 1 hour
+            let totalMin = 0;
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().split('T')[0];
+                const min = stats[key] || 0;
+                days.push({ day: d.toLocaleDateString('en-US', { weekday: 'short' })[0], min });
+                if (min > maxMin) maxMin = min;
+                totalMin += min;
+            }
+
+            days.forEach(d => {
+                const bar = document.createElement('div');
+                bar.className = 'stats-bar';
+                const height = (d.min / maxMin) * 100;
+                bar.style.height = `${Math.max(2, height)}%`;
+                bar.title = `${d.min} mins`;
+                container.appendChild(bar);
+
+                const label = document.createElement('div');
+                label.className = 'stats-day';
+                label.innerText = d.day;
+                labels.appendChild(label);
+            });
+
+            const h = Math.floor(totalMin / 60);
+            const m = Math.round(totalMin % 60);
+            totalText.innerText = `Total: ${h}h ${m}m`;
         }
 
         /* AUDIO & NOTIFICATIONS */
         let isMuted = false;
-        const playlist = ['assets/music/audio1.mp3', 'assets/music/audio2.mp3'];
+        const playlist = ['assets/music/audio1.mp3', 'assets/music/audio2.mp3', 'assets/music/audio3.mp3', 'assets/music/audio4.mp3'];
         let currentTrackIndex = 0;
         const musicPlayer = document.getElementById('bg-music');
         musicPlayer.addEventListener('ended', () => {
@@ -911,17 +1155,50 @@
             showToast(message);
         }
 
+        /* CLOCK CONTROLS */
+        function cycleClockMode() {
+            const clockEl = document.getElementById('digital-clock');
+            clockEl.classList.toggle('large');
+            document.getElementById('clock-mode').value = clockEl.classList.contains('large') ? 'large' : 'small';
+            savePreferences();
+        }
+
+        function toggleClock(show, event) {
+            if (event) event.stopPropagation();
+            const clockEl = document.getElementById('digital-clock');
+            const restoreBtn = document.getElementById('restore-clock-wrapper');
+            
+            if (show) {
+                clockEl.classList.remove('hidden');
+                restoreBtn.classList.add('hidden');
+                const mode = document.getElementById('clock-mode').value;
+                if (mode === 'hidden') {
+                    document.getElementById('clock-mode').value = 'small';
+                }
+            } else {
+                clockEl.classList.add('hidden');
+                if (isSessionActive) restoreBtn.classList.remove('hidden');
+                document.getElementById('clock-mode').value = 'hidden';
+            }
+            savePreferences();
+        }
+
         /* WAKE CONTROLS */
         let hideControlsTimer;
         function wakeControls() {
             const fc = document.querySelector('.floating-controls');
             const bl = document.getElementById('bottom-links-container');
             const tracker = document.getElementById('session-tracker');
+            const clockEl = document.getElementById('digital-clock');
+            const restoreBtn = document.getElementById('restore-clock-wrapper');
+
             if (fc) {
                 fc.style.opacity = '1';
                 fc.style.pointerEvents = 'auto';
                 if (bl) bl.style.opacity = '1';
                 if (tracker && isSessionActive) tracker.style.opacity = '0.5';
+                if (clockEl && isSessionActive && !clockEl.classList.contains('hidden')) clockEl.style.opacity = '1';
+                if (restoreBtn && isSessionActive && !restoreBtn.classList.contains('hidden')) restoreBtn.style.opacity = '1';
 
                 clearTimeout(hideControlsTimer);
                 hideControlsTimer = setTimeout(() => {
@@ -930,6 +1207,8 @@
                         fc.style.pointerEvents = 'none';
                         if (bl) bl.style.opacity = '0';
                         if (tracker) tracker.style.opacity = '0';
+                        if (clockEl && !clockEl.classList.contains('large')) clockEl.style.opacity = '0';
+                        if (restoreBtn) restoreBtn.style.opacity = '0';
                         document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('active'));
                     }
                 }, 3000);
@@ -965,6 +1244,7 @@
             const breakVal = document.getElementById('break-select').value;
             const bMins = breakVal === 'custom' ? document.getElementById('custom-break').value : breakVal;
             const loopsVal = document.getElementById('loops-select').value;
+            const lCount = loopsVal === 'custom' ? document.getElementById('custom-loops').value : loopsVal;
 
             if (!wMins || wMins <= 0) return alert("Please enter a valid work duration.");
 
@@ -982,7 +1262,7 @@
 
             workDuration = parseFloat(wMins) * 60;
             breakDuration = parseFloat(bMins || 0) * 60;
-            totalLoops = loopsVal === 'infinite' ? Infinity : parseInt(loopsVal);
+            totalLoops = lCount === 'infinite' ? Infinity : parseInt(lCount);
             currentLoop = 1;
 
             if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
@@ -994,6 +1274,20 @@
             document.getElementById('shuffle-wrapper').classList.remove('hidden');
             document.getElementById('session-tracker').classList.remove('hidden');
             document.getElementById('universal-progress-container').style.opacity = '1';
+            
+            const clockEl = document.getElementById('digital-clock');
+            const clockMode = document.getElementById('clock-mode').value;
+            const restoreBtn = document.getElementById('restore-clock-wrapper');
+            
+            clockEl.classList.remove('hidden', 'large');
+            restoreBtn.classList.add('hidden');
+
+            if (clockMode === 'hidden') {
+                clockEl.classList.add('hidden');
+                restoreBtn.classList.remove('hidden');
+            } else if (clockMode === 'large') {
+                clockEl.classList.add('large');
+            }
 
             isSessionActive = true;
 
@@ -1002,9 +1296,9 @@
         }
 
         function updateTracker() {
-            const tracker = document.getElementById('session-tracker');
+            const indicator = document.getElementById('loop-indicator');
             const loopText = totalLoops === Infinity ? '∞' : totalLoops;
-            tracker.innerText = `Loop: ${currentLoop} / ${loopText}`;
+            indicator.innerText = `Loop: ${currentLoop} / ${loopText}`;
         }
 
         function startWorkPhase() {
@@ -1022,6 +1316,7 @@
         }
 
         function startBreakPhase() {
+            recordFocusTime(workDuration / 60);
             isBreak = true;
             targetEndTime = Date.now() + (breakDuration * 1000);
             playChime("Break Time!");
@@ -1056,10 +1351,15 @@
                 updateBreakDisplay(remaining);
                 if (remaining <= 0) endBreak();
             } else {
+                const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+                const s = (remaining % 60).toString().padStart(2, '0');
+                document.getElementById('clock-display-text').innerText = `${m}:${s}`;
+
                 if (remaining <= 0) {
                     if (breakDuration > 0 && (currentLoop < totalLoops || totalLoops === Infinity)) {
                         startBreakPhase();
                     } else {
+                        recordFocusTime(workDuration / 60);
                         currentLoop++;
                         if (currentLoop > totalLoops) {
                             playChime("Session Complete!");
@@ -1076,6 +1376,7 @@
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = (seconds % 60).toString().padStart(2, '0');
             document.getElementById('break-timer-display').innerText = `${m}:${s}`;
+            document.getElementById('clock-display-text').innerText = `${m}:${s}`;
         }
 
         function endSession() {
@@ -1085,6 +1386,7 @@
             document.getElementById('break-screen').classList.add('hidden');
             document.getElementById('cancel-wrapper').classList.add('hidden');
             document.getElementById('shuffle-wrapper').classList.add('hidden');
+            document.getElementById('restore-clock-wrapper').classList.add('hidden');
             document.getElementById('session-tracker').classList.add('hidden');
             document.getElementById('universal-progress-container').style.opacity = '0';
             document.getElementById('universal-progress').style.width = '0%';
@@ -1111,7 +1413,10 @@
                         currentVisualizer.draw();
                     }
                 } else if (isBreak) {
-                    if (currentVisualizer) currentVisualizer.draw();
+                    if (currentVisualizer) {
+                        currentVisualizer.update(1.0); // Keep full progress state during break
+                        currentVisualizer.draw();
+                    }
                 }
             }
             requestAnimationFrame(globalRenderLoop);
@@ -1123,8 +1428,13 @@
         const ctx = canvas.getContext('2d');
 
         function resizeCanvas() {
+            const oldWidth = canvas.width;
+            const oldHeight = canvas.height;
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            if (currentVisualizer && currentVisualizer.resize) {
+                currentVisualizer.resize(oldWidth, oldHeight);
+            }
             if (currentVisualizer && currentVisualizer.draw) currentVisualizer.draw();
         }
         window.addEventListener('resize', resizeCanvas);
@@ -1143,6 +1453,7 @@
             reset() { this.progress = 0; }
             update(p) { this.progress = p; }
             draw() { }
+            resize(oldW, oldH) { }
         }
 
         // 1. LIQUID FLOW
@@ -1164,8 +1475,10 @@
                 ctx.globalAlpha = 0.4;
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height);
-                for (let x = 0; x <= canvas.width; x += 20) {
-                    ctx.lineTo(x, topY + Math.sin(x * 0.01 + this.time) * 20);
+                for (let x = 0; x <= canvas.width; x += 15) {
+                    let w1 = Math.sin(x * 0.01 + this.time) * 20;
+                    let w2 = Math.sin(x * 0.02 - this.time * 0.5) * 10;
+                    ctx.lineTo(x, topY + w1 + w2);
                 }
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.fill();
@@ -1178,8 +1491,10 @@
 
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height);
-                for (let x = 0; x <= canvas.width; x += 20) {
-                    ctx.lineTo(x, topY + Math.sin(x * 0.01 + this.time + Math.PI) * 15);
+                for (let x = 0; x <= canvas.width; x += 15) {
+                    let w1 = Math.sin(x * 0.015 + this.time + Math.PI) * 15;
+                    let w2 = Math.cos(x * 0.01 - this.time * 0.8) * 8;
+                    ctx.lineTo(x, topY + w1 + w2);
                 }
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.fill();
@@ -1190,7 +1505,7 @@
                     if (p.y < 0) p.y = 1;
                     let px = p.x * canvas.width;
                     let py = topY + p.y * fillHeight;
-                    if (py > topY + 15) {
+                    if (py > topY + 20) {
                         ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2); ctx.fill();
                     }
                 });
@@ -1203,6 +1518,9 @@
                 super();
                 this.time = 0;
                 this.stars = Array.from({ length: 80 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, s: Math.random() * 2 }));
+            }
+            resize() {
+                this.stars.forEach(s => { s.x = Math.random() * canvas.width; s.y = Math.random() * canvas.height; });
             }
             draw() {
                 const colors = getThemeColors();
@@ -1316,29 +1634,33 @@
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
 
-                const maxDots = 2500;
+                const maxDots = Math.floor((canvas.width * canvas.height) / 400);
                 const dots = Math.floor(this.progress * maxDots);
-
-                const c = (Math.min(canvas.width, canvas.height) * 0.45) / Math.sqrt(maxDots);
+                const c = (Math.min(canvas.width, canvas.height) * 0.7) / Math.sqrt(maxDots);
 
                 const baseAngle = 137.508 * (Math.PI / 180);
                 const dynamicAngle = baseAngle + Math.sin(this.time * 0.5) * 0.0002;
 
+                // Draw "Ghost" of full pattern
+                ctx.fillStyle = colors.accent;
+                ctx.globalAlpha = 0.15;
+                for (let n = dots; n < maxDots; n += 2) {
+                    let r = c * Math.sqrt(n);
+                    let theta = n * dynamicAngle + (this.time * 0.2);
+                    let x = cx + r * Math.cos(theta);
+                    let y = cy + r * Math.sin(theta);
+                    ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI * 2); ctx.fill();
+                }
+
                 ctx.fillStyle = colors.bar;
                 ctx.globalAlpha = 0.8;
-
                 for (let n = 0; n < dots; n++) {
                     let r = c * Math.sqrt(n);
                     let theta = n * dynamicAngle + (this.time * 0.2);
-
                     let x = cx + r * Math.cos(theta);
                     let y = cy + r * Math.sin(theta);
-
-                    let size = 1 + (r / 50);
-
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fill();
+                    let size = 1 + (r / 60);
+                    ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
                 }
                 ctx.globalAlpha = 1.0;
             }
@@ -1349,55 +1671,90 @@
             constructor() {
                 super();
                 this.blocks = [];
-                this.blockSize = 30;
-                this.cols = Math.ceil(window.innerWidth / this.blockSize);
-                this.rows = Math.ceil(window.innerHeight / this.blockSize);
+                this.baseSize = 40;
+                this.colHeights = null;
+                this.colDeck = [];
+                this.initParams();
+            }
+            shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            initParams() {
+                this.cols = Math.ceil(canvas.width / this.baseSize);
+                this.rows = Math.ceil(canvas.height / this.baseSize);
                 this.maxBlocks = this.cols * this.rows;
-                this.colHeights = new Array(this.cols).fill(window.innerHeight);
+                
+                if (!this.colHeights || this.colHeights.length !== this.cols) {
+                    this.colHeights = new Array(this.cols).fill(canvas.height);
+                }
+            }
+            resize(oldW, oldH) {
+                const dy = canvas.height - oldH;
+                this.initParams();
+                if (dy !== 0) {
+                    this.blocks.forEach(b => { if (b.settled) b.y += dy; });
+                    for (let i = 0; i < this.colHeights.length; i++) this.colHeights[i] += dy;
+                }
             }
             reset() {
                 super.reset();
                 this.blocks = [];
-                this.colHeights = new Array(this.cols).fill(window.innerHeight);
+                this.colDeck = [];
+                this.initParams();
+                this.colHeights = new Array(this.cols).fill(canvas.height);
             }
-            draw() {
-                const colors = getThemeColors();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            update(p) {
+                super.update(p);
+                const targetBlocks = Math.floor(this.progress * this.maxBlocks);
 
-                let targetBlocks = Math.floor(this.progress * this.maxBlocks);
-
-                while (this.blocks.length < targetBlocks) {
-                    let col = Math.floor(Math.random() * this.cols);
+                let addedThisFrame = 0;
+                while (this.blocks.length < targetBlocks && addedThisFrame < 15) {
+                    if (this.colDeck.length === 0) {
+                        for(let i=0; i<this.cols; i++) this.colDeck.push(i);
+                        this.shuffle(this.colDeck);
+                    }
+                    let col = this.colDeck.pop();
+                    let size = this.baseSize;
                     this.blocks.push({
-                        x: col * this.blockSize,
-                        y: -this.blockSize - (Math.random() * 200),
-                        col: col,
-                        vy: 4 + Math.random() * 8,
-                        settled: false,
-                        angle: (Math.random() - 0.5) * 0.2
+                        x: col * this.baseSize,
+                        y: -size - (Math.random() * 500),
+                        bw: size,
+                        bh: size,
+                        vy: 6 + Math.random() * 8,
+                        settled: false
                     });
+                    addedThisFrame++;
                 }
-
-                ctx.fillStyle = colors.bar;
-                ctx.strokeStyle = colors.bg;
-                ctx.lineWidth = 2;
 
                 this.blocks.forEach(b => {
                     if (!b.settled) {
                         b.y += b.vy;
-                        let floor = this.colHeights[b.col];
-                        if (b.y + this.blockSize >= floor) {
-                            b.y = floor - this.blockSize;
+                        let colIdx = Math.floor(b.x / this.baseSize);
+                        let minFloor = (this.colHeights && this.colHeights[colIdx] !== undefined) ? this.colHeights[colIdx] : canvas.height;
+
+                        if (b.y + b.bh >= minFloor) {
+                            b.y = minFloor - b.bh;
                             b.settled = true;
-                            this.colHeights[b.col] = b.y;
+                            if (this.colHeights && this.colHeights[colIdx] !== undefined) this.colHeights[colIdx] = b.y;
                         }
                     }
+                });
+            }
+            draw() {
+                const colors = getThemeColors();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = colors.bg;
+                ctx.lineWidth = 1;
 
-                    ctx.save();
-                    ctx.translate(b.x + this.blockSize / 2, b.y + this.blockSize / 2);
-                    if (b.settled) ctx.rotate(b.angle);
-                    ctx.fillRect(-this.blockSize / 2 + 1, -this.blockSize / 2 + 1, this.blockSize - 2, this.blockSize - 2);
-                    ctx.restore();
+                this.blocks.forEach(b => {
+                    if (b.y + b.bh > 0 && b.y < canvas.height) {
+                        ctx.fillStyle = colors.bar;
+                        ctx.fillRect(b.x, b.y, b.bw, b.bh);
+                        ctx.strokeRect(b.x, b.y, b.bw, b.bh);
+                    }
                 });
             }
         }
@@ -1408,51 +1765,61 @@
             draw() {
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.time += 0.02;
-                
+                this.time += 0.04; 
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
-                const maxR = Math.min(cx, cy) * 0.9;
                 
+                // Radius to fill corners
+                const maxR = Math.sqrt(cx*cx + cy*cy);
                 const maxRings = 50;
                 const rings = Math.floor(this.progress * maxRings);
                 
+                // Draw "Ghost" of full pattern - actual wobbles but very faint
+                ctx.globalAlpha = 0.05;
                 ctx.strokeStyle = colors.bar;
-                
-                for (let i = 1; i <= rings; i++) {
+                for (let i = 1; i <= maxRings; i++) {
                     let baseR = (i / maxRings) * maxR;
-                    
-                    ctx.save();
-                    ctx.translate(cx, cy);
-                    
+                    ctx.save(); ctx.translate(cx, cy);
                     let dir = i % 2 === 0 ? 1 : -1;
-                    ctx.rotate((this.time * 0.5 * dir) + (i * 0.1));
-                    
+                    ctx.rotate((this.time * 0.7 * dir) + (i * 0.1)); 
                     ctx.beginPath();
-                    const points = 120; // smooth circle
+                    const points = 60; 
                     for (let p = 0; p <= points; p++) {
                         let angle = (p / points) * Math.PI * 2;
-                        
-                        // The wobble frequency (number of lobes) varies by ring!
-                        let lobes = 3 + (i % 5); 
-                        // Trippy pulsating wave
-                        let wobble = Math.sin(angle * lobes + this.time * 2 * dir) * (baseR * 0.15);
-                        
+                        let lobes = 3 + (i % 7); 
+                        let wobble = Math.sin(angle * lobes + this.time * 4 * dir) * (baseR * 0.15);
                         let r = baseR + wobble;
-                        let x = r * Math.cos(angle);
-                        let y = r * Math.sin(angle);
-                        
-                        if (p === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
+                        let x = r * Math.cos(angle); let y = r * Math.sin(angle);
+                        if (p === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                     }
                     ctx.closePath();
-                    
-                    // Dynamic thickness and opacity for 3D depth
-                    ctx.lineWidth = 1 + Math.abs(Math.sin(this.time * 3 + i)) * 1.5;
-                    ctx.globalAlpha = 0.4 + 0.6 * (i / maxRings);
-                    
+                    ctx.lineWidth = 1;
                     ctx.stroke();
                     ctx.restore();
+                }
+
+                // Draw Active Rings
+                ctx.globalAlpha = 1.0;
+                ctx.strokeStyle = colors.bar;
+                for (let i = 1; i <= rings; i++) {
+                    let baseR = (i / maxRings) * maxR;
+                    ctx.save(); ctx.translate(cx, cy);
+                    let dir = i % 2 === 0 ? 1 : -1;
+                    ctx.rotate((this.time * 0.7 * dir) + (i * 0.1)); 
+                    ctx.beginPath();
+                    const points = 100;
+                    for (let p = 0; p <= points; p++) {
+                        let angle = (p / points) * Math.PI * 2;
+                        let lobes = 3 + (i % 7); 
+                        let wobble = Math.sin(angle * lobes + this.time * 4 * dir) * (baseR * 0.15);
+                        let r = baseR + wobble;
+                        let x = r * Math.cos(angle); let y = r * Math.sin(angle);
+                        if (p === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.lineWidth = 1.5 + Math.abs(Math.sin(this.time * 4 + i)) * 2;
+                    ctx.globalAlpha = 0.2 + 0.8 * (i / rings);
+                    ctx.stroke(); ctx.restore();
                 }
                 ctx.globalAlpha = 1.0;
             }
@@ -1465,32 +1832,40 @@
                 const colors = getThemeColors();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 this.time += 0.02;
-
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
 
-                const R = Math.min(cx, cy) * 0.6;
-                const r = R * 0.28; 
+                const R = Math.sqrt(cx*cx + cy*cy) * 0.8;
+                const r = R * 0.35; 
                 const offset = R * 0.6;
-
-                const maxTheta = 300 * Math.PI;
+                const maxTheta = 400 * Math.PI;
                 const currentTheta = this.progress * maxTheta;
 
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(this.time * 0.15);
+
+                // Draw "Ghost"
                 ctx.strokeStyle = colors.bar;
                 ctx.lineWidth = 1;
-
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.rotate(this.time * 0.1);
-
+                ctx.globalAlpha = 0.05;
                 ctx.beginPath();
-                for (let t = 0; t <= currentTheta; t += 0.5) {
+                for (let t = 0; t <= maxTheta; t += 10.0) {
                     let x = (R - r) * Math.cos(t) + offset * Math.cos(((R - r) / r) * t);
                     let y = (R - r) * Math.sin(t) - offset * Math.sin(((R - r) / r) * t);
-                    if (t === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                    if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.stroke();
+
+                // Draw Active
+                ctx.strokeStyle = colors.bar;
+                ctx.lineWidth = 1.5;
+                ctx.globalAlpha = 1.0;
+                ctx.beginPath();
+                for (let t = 0; t <= currentTheta; t += 1.0) {
+                    let x = (R - r) * Math.cos(t) + offset * Math.cos(((R - r) / r) * t);
+                    let y = (R - r) * Math.sin(t) - offset * Math.sin(((R - r) / r) * t);
+                    if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke(); 
                 ctx.restore();
             }
         }
