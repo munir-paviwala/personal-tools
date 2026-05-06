@@ -9,6 +9,158 @@
     
     <script src="assets/js/jszip.min.js"></script>
     <style>
+        :root {
+            --deep-indigo: #1a237e;
+            --marigold: #ffc107;
+            --burnt-orange: #bf360c;
+            --deep-magenta: #880e4f;
+            --vibrant-pink: #c2185b;
+            --peacock: #00bcd4;
+            --forest-green: #1b5e20;
+            --white-silk: #f1f1f1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-indigo);
+            /* Retro 90s dot grid pattern using Marigold */
+            background-image: radial-gradient(var(--marigold) 2px, transparent 2px);
+            background-size: 30px 30px;
+            color: var(--white-silk);
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* The Main 90s Container */
+        .hub-container {
+            background: var(--deep-magenta);
+            border: 8px solid var(--marigold);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 15px 15px 0px var(--peacock);
+            position: relative;
+        }
+
+        /* Classic 90s Marquee replacement */
+        .status-bar {
+            background: var(--marigold);
+            color: var(--deep-indigo);
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border-bottom: 4px solid var(--burnt-orange);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 4rem;
+            color: var(--marigold);
+            margin: 40px 0 20px 0;
+            text-shadow: 4px 4px var(--burnt-orange);
+            line-height: 1;
+            text-align: center;
+        }
+
+        .intro {
+        font-family: 'VT323', monospace;
+        font-size: 1.5rem;
+        line-height: 1.3;
+        text-align: left;
+        margin-bottom: 40px;
+        background: #000000; /* Harsh black like a terminal */
+        color: var(--marigold);
+        padding: 20px;
+        border: 4px inset var(--burnt-orange); /* Classic 90s 3D inset border */
+        text-transform: uppercase;
+        box-shadow: 8px 8px 0px var(--peacock);
+        }
+
+        /* Directory List */
+        .tool-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .tool-link {
+            text-decoration: none;
+            background: var(--white-silk);
+            color: var(--deep-indigo);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border: 4px solid var(--deep-indigo);
+            box-shadow: 8px 8px 0px var(--forest-green);
+            transition: all 0.1s ease-in-out;
+            cursor: pointer;
+        }
+
+        .tool-link:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px var(--peacock);
+            background: var(--marigold);
+        }
+
+        .tool-link:active {
+            transform: translate(4px, 4px);
+            box-shadow: 4px 4px 0px var(--burnt-orange);
+        }
+
+        .tool-number {
+            font-family: 'VT323', monospace;
+            font-size: 3rem;
+            color: var(--burnt-orange);
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .tool-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tool-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .tool-desc {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: #333;
+        }
+
+        /* Web 1.0 Footer */
+        footer {
+            margin-top: 40px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: var(--marigold);
+            text-align: center;
+            text-transform: uppercase;
+        }
+        @media (max-width: 600px) {
+            .hub-container { padding: 20px; border-width: 4px; box-shadow: 8px 8px 0px var(--peacock); }
+            h1 { font-size: 2.5rem; margin-top: 50px; } /* Extra top margin for the status bar */
+            .tool-link { padding: 15px; }
+            .tool-number { font-size: 2rem; margin-right: 15px; }
+            .tool-title { font-size: 1.2rem; }
+        }
+
         /* Modal for download instructions */
         .download-modal {
             position: fixed;
@@ -100,13 +252,7 @@
                 </div>
             </a>
 
-            <div onclick="downloadOffline()" class="tool-link" style="background: var(--peacock); border-color: var(--white-silk); margin-top: 10px;">
-                <div class="tool-number" style="color: var(--deep-indigo);">↓</div>
-                <div class="tool-details">
-                    <span class="tool-title" style="color: var(--deep-indigo);">Download for Offline Use</span>
-                    <span class="tool-desc" style="color: rgba(0,0,0,0.6);">Take everything with you. No internet required ever again.</span>
-                </div>
-            </div>
+
         </div>
     </div>
 
@@ -114,6 +260,7 @@
         &copy; 2026 // Built for personal utility<br><br>
         <div style="display:flex; justify-content:center; gap:10px;">
             <button onclick="wipeAllData()" style="background: var(--burnt-orange); color: var(--white-silk); padding: 10px; border: 2px solid var(--marigold); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase;">Wipe All Local Data</button>
+            <button onclick="downloadOffline()" style="background: var(--peacock); color: var(--deep-indigo); padding: 10px; border: 2px solid var(--white-silk); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold;">Download Offline Bundle</button>
         </div>
     </footer>
 
@@ -230,5 +377,6 @@
             document.getElementById('modal-close').classList.remove('hidden');
         }
     }
+    </script>
 </body>
 </html>
