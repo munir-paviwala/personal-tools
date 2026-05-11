@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Base64 Coder</title>
+    <link href="assets/css/space-grotesk.css" rel="stylesheet">
+    <link href="assets/css/vt323.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --deep-indigo: #1a237e;
+            --marigold: #ffc107;
+            --burnt-orange: #bf360c;
+            --deep-magenta: #880e4f;
+            --vibrant-pink: #c2185b;
+            --peacock: #00bcd4;
+            --forest-green: #1b5e20;
+            --white-silk: #f1f1f1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-magenta);
+            background-image: 
+                linear-gradient(30deg, var(--vibrant-pink) 12%, transparent 12.5%, transparent 87%, var(--vibrant-pink) 87.5%, var(--vibrant-pink)),
+                linear-gradient(150deg, var(--vibrant-pink) 12%, transparent 12.5%, transparent 87%, var(--vibrant-pink) 87.5%, var(--vibrant-pink)),
+                linear-gradient(30deg, var(--vibrant-pink) 12%, transparent 12.5%, transparent 87%, var(--vibrant-pink) 87.5%, var(--vibrant-pink)),
+                linear-gradient(150deg, var(--vibrant-pink) 12%, transparent 12.5%, transparent 87%, var(--vibrant-pink) 87.5%, var(--vibrant-pink)),
+                linear-gradient(60deg, #9b125a 25%, transparent 25.5%, transparent 75%, #9b125a 75.5%, #9b125a),
+                linear-gradient(60deg, #9b125a 25%, transparent 25.5%, transparent 75%, #9b125a 75.5%, #9b125a);
+            background-size: 80px 140px;
+            background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--deep-indigo);
+            padding: 40px 30px;
+            text-align: center;
+            border-radius: 120px 120px 20px 20px;
+            border: 6px solid var(--marigold);
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.4);
+        }
+
+        h1 { 
+            margin: 0; 
+            font-weight: 700; 
+            font-size: 2.5rem; 
+            color: var(--marigold); 
+            letter-spacing: -1px;
+            text-shadow: 3px 3px var(--burnt-orange);
+        }
+
+        .intro { 
+            color: var(--white-silk); 
+            max-width: 500px; 
+            margin: 15px auto 0; 
+            line-height: 1.4; 
+            font-size: 1rem;
+        }
+
+        .coder-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: var(--white-silk);
+            border: 6px solid var(--deep-indigo);
+            color: #333;
+            padding: 15px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            resize: vertical;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--peacock);
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            background: rgba(26, 35, 126, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 2px solid var(--marigold);
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 4px 4px 0px black;
+        }
+
+        button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px black; }
+        
+        .btn-encode { background: var(--peacock); color: var(--deep-indigo); }
+        .btn-decode { background: var(--marigold); color: var(--burnt-orange); }
+        .btn-copy { background: var(--forest-green); color: white; margin-top: 10px; width: 100%; }
+
+        @media (max-width: 600px) {
+            header { padding: 30px 20px; border-radius: 60px 60px 15px 15px; }
+            h1 { font-size: 2rem; }
+            .actions { flex-direction: column; }
+            button { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>BASE64 CODER</h1>
+        <p class="intro">
+            Offline, browser-based Base64 encoder/decoder. Obscure text or JSON to make it difficult for bots to read directly.
+        </p>
+    </header>
+
+    <div class="coder-container">
+        <textarea id="input-area" placeholder="Paste your text or JSON here..."></textarea>
+        
+        <div class="actions">
+            <button class="btn-encode" id="encode-btn">Encode to Base64</button>
+            <button class="btn-decode" id="decode-btn">Decode from Base64</button>
+        </div>
+
+        <textarea id="output-area" placeholder="Result will appear here..." readonly></textarea>
+        <button class="btn-copy" id="copy-btn">Copy Result</button>
+    </div>
+
+    <script>
+        const inputArea = document.getElementById('input-area');
+        const outputArea = document.getElementById('output-area');
+        const encodeBtn = document.getElementById('encode-btn');
+        const decodeBtn = document.getElementById('decode-btn');
+        const copyBtn = document.getElementById('copy-btn');
+
+        // Helper to handle UTF-8 correctly in Base64
+        function utf8_to_b64(str) {
+            return window.btoa(unescape(encodeURIComponent(str)));
+        }
+
+        function b64_to_utf8(str) {
+            return decodeURIComponent(escape(window.atob(str)));
+        }
+
+        encodeBtn.onclick = () => {
+            const text = inputArea.value;
+            if (!text) return;
+            try {
+                outputArea.value = utf8_to_b64(text);
+            } catch (err) {
+                outputArea.value = "Error encoding. Check your input.";
+            }
+        };
+
+        decodeBtn.onclick = () => {
+            const text = inputArea.value.trim();
+            if (!text) return;
+            try {
+                outputArea.value = b64_to_utf8(text);
+            } catch (err) {
+                outputArea.value = "Error decoding. Invalid Base64 string.";
+            }
+        };
+
+        copyBtn.onclick = async () => {
+            if (!outputArea.value) return;
+            try {
+                await navigator.clipboard.writeText(outputArea.value);
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = "COPIED!";
+                setTimeout(() => copyBtn.innerText = originalText, 2000);
+            } catch (err) {
+                alert("Failed to copy text.");
+            }
+        };
+    </script>
+</body>
+</html>
