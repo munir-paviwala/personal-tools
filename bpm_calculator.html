@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>BPM Analyzer</title>
+    <link href="assets/css/space-grotesk.css" rel="stylesheet">
+    <link href="assets/css/vt323.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --accent: #333;
+            --bar: #ffffff;
+            --box-bg: rgba(255, 255, 255, 0.02);
+            --danger: #ff4757;
+            --font-body: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --font-heading: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, Consolas, monospace;
+            --border-w: 1px;
+            --shadow-offset: 0px;
+            --btn-text-transform: none;
+            --heading-size: 2.2rem;
+            --heading-shadow: none;
+            --transition-speed: 0.4s;
+            --pattern-opacity: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-speed), color var(--transition-speed);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image: radial-gradient(var(--accent) 1.5px, transparent 1.5px);
+            background-size: 35px 35px;
+            opacity: var(--pattern-opacity);
+            transition: opacity var(--transition-speed);
+        }
+
+        .container {
+            width: 450px;
+            max-width: 90%;
+            padding: 40px;
+            border-radius: calc(16px - (var(--border-w) * 2));
+            border: var(--border-w) solid var(--accent);
+            background: var(--box-bg);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            box-sizing: border-box;
+            transition: all var(--transition-speed);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-weight: normal;
+            letter-spacing: 1px;
+            margin: 0 0 5px 0;
+            font-size: var(--heading-size);
+            text-shadow: var(--heading-shadow);
+            line-height: 1;
+            transition: all var(--transition-speed);
+            text-transform: uppercase;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        #drop-zone {
+            border: var(--border-w) dashed var(--accent);
+            border-radius: calc(12px - var(--border-w));
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        #drop-zone.hover {
+            background: var(--accent);
+            border-style: solid;
+        }
+
+        #drop-zone p {
+            margin: 0;
+            font-size: 1rem;
+            opacity: 0.8;
+            font-weight: bold;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .bpm-display {
+            font-family: var(--font-heading);
+            font-size: 5rem;
+            font-weight: bold;
+            color: var(--bar);
+            line-height: 1;
+            margin: 20px 0 10px 0;
+            text-shadow: var(--heading-shadow);
+        }
+
+        .filename {
+            font-size: 0.8rem;
+            opacity: 0.5;
+            word-break: break-all;
+            margin-top: 15px;
+        }
+
+        #status {
+            margin: 15px 0;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--bar);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            color: var(--text);
+            cursor: pointer;
+            border-radius: calc(8px - var(--border-w));
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            text-transform: var(--btn-text-transform);
+            box-shadow: calc(var(--shadow-offset)*0.5) calc(var(--shadow-offset)*0.5) 0px var(--bar);
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        button:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: calc(var(--shadow-offset)*0.7) calc(var(--shadow-offset)*0.7) 0px var(--bar);
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .adjust-btn {
+            width: 50px;
+            padding: 8px 0;
+            margin: 0 5px;
+        }
+
+        /* Floating Theme Controls */
+        .floating-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 5000;
+        }
+
+        .custom-select {
+            position: relative;
+            width: 200px;
+            font-family: var(--font-body);
+        }
+
+        .select-selected {
+            padding: 10px 15px;
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(8px - var(--border-w));
+            background: var(--bg);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: calc(var(--shadow-offset)*0.3) calc(var(--shadow-offset)*0.3) 0px var(--bar);
+        }
+
+        .select-selected:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .select-selected::after {
+            content: '▼';
+            font-size: 0.6rem;
+            opacity: 0.8;
+            transition: transform 0.2s;
+        }
+
+        .custom-select.active .select-selected::after {
+            transform: rotate(180deg);
+        }
+
+        .select-items {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            margin-top: 5px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            border-radius: calc(8px - var(--border-w));
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar);
+            display: none;
+        }
+
+        .custom-select.active .select-items {
+            display: block;
+        }
+
+        .select-items div {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--accent);
+            transition: background 0.2s;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .select-items div:last-child {
+            border-bottom: none;
+        }
+
+        .select-items div:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        #result-container {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .bpm-display {
+                font-size: 4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="floating-controls">
+        <div class="custom-select" id="theme-selector">
+            <div class="select-selected" id="theme-display">Sleek Midnight</div>
+            <div class="select-items" id="theme-list"></div>
+        </div>
+        <input type="hidden" id="theme-select" value="zone-night">
+    </div>
+
+    <div class="container">
+        <h1>BPM Analyzer</h1>
+        <p class="subtitle">100% Client-Side • Privacy First</p>
+
+        <div id="drop-zone">
+            <p>Drag & drop audio here</p>
+            <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 8px;">or click to browse (.mp3, .wav, .m4a)</p>
+            <input type="file" id="file-input" accept="audio/*">
+        </div>
+
+        <div id="status"></div>
+
+        <div id="result-container">
+            <div class="bpm-display" id="bpm-output">--</div>
+            <div style="font-size: 1rem; opacity: 0.7; margin-bottom: 20px; font-weight: bold; letter-spacing: 2px;">BPM</div>
+            
+            <div style="margin-bottom: 20px;">
+                <button class="adjust-btn" onclick="halveBPM()" title="Halve BPM">/2</button>
+                <button class="adjust-btn" onclick="doubleBPM()" title="Double BPM">x2</button>
+            </div>
+            
+            <div class="filename" id="file-name"></div>
+            
+            <button onclick="resetAnalyzer()" style="margin-top: 25px; font-size: 0.8rem; opacity: 0.8;">Analyze Another</button>
+        </div>
+        
+        <div id="description" style="margin-top: 30px; font-size: 0.85rem; text-align: left; opacity: 0.6; line-height: 1.5; border-top: 1px solid var(--accent); padding-top: 20px;">
+            Extract the tempo of any track instantly. This tool processes audio directly in your browser—no files are ever uploaded to a server.
+        </div>
+    </div>
+
+    <script>
+        /* THEMES CONFIGURATION */
+        const themes = {
+            'zone-night': { name: 'Sleek Midnight', bg: '#121212', text: '#e0e0e0', accent: '#333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.02)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', patternOpacity: '0' },
+            'zone-day': { name: 'Coffee Cozy', bg: '#fbf7f0', text: '#5c4b37', accent: '#d4c5b0', bar: '#8bba94', boxBg: 'rgba(0,0,0,0.02)', fontBody: 'ui-monospace, monospace', fontHeading: 'ui-monospace, monospace', borderW: '1px', shadowW: '0px', btnTransform: 'none', patternOpacity: '0' },
+            'ind-dark-1': { name: 'Indigo Maximalist', bg: '#311b92', text: '#ffc107', accent: '#00bcd4', bar: '#bf360c', boxBg: 'rgba(0,0,0,0.4)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', patternOpacity: '0.15' },
+            'ind-light-1': { name: 'Pistachio Minimal', bg: '#faf8f5', text: '#3e2723', accent: '#c5e1a5', bar: '#d84315', boxBg: 'rgba(255,255,255,0.8)', fontBody: '"Space Grotesk", sans-serif', fontHeading: '"VT323", monospace', borderW: '4px', shadowW: '8px', btnTransform: 'uppercase', patternOpacity: '0.15' }
+        };
+
+        /* UI & THEME LOGIC */
+        function applyTheme(themeKey) {
+            const t = themes[themeKey];
+            if (!t) return;
+            const root = document.documentElement;
+            root.style.setProperty('--bg', t.bg);
+            root.style.setProperty('--text', t.text);
+            root.style.setProperty('--accent', t.accent);
+            root.style.setProperty('--bar', t.bar);
+            root.style.setProperty('--box-bg', t.boxBg);
+            root.style.setProperty('--font-body', t.fontBody);
+            root.style.setProperty('--font-heading', t.fontHeading);
+            root.style.setProperty('--border-w', t.borderW);
+            root.style.setProperty('--shadow-offset', t.shadowW);
+            root.style.setProperty('--btn-text-transform', t.btnTransform);
+            root.style.setProperty('--heading-size', '2.2rem');
+            root.style.setProperty('--pattern-opacity', t.patternOpacity);
+            root.style.setProperty('--heading-shadow', t.shadowW === '0px' ? 'none' : `3px 3px ${t.bar}`);
+            
+            localStorage.setItem('bpmAnalyzerTheme', themeKey);
+            
+            // Sync with other apps if possible
+            let unified = localStorage.getItem('unifiedWriterPrefs');
+            if (unified) {
+                let p = JSON.parse(unified);
+                p.theme = themeKey;
+                localStorage.setItem('unifiedWriterPrefs', JSON.stringify(p));
+            }
+        }
+
+        function populateThemeList() {
+            const list = document.getElementById('theme-list');
+            for (const [key, t] of Object.entries(themes)) {
+                const div = document.createElement('div');
+                div.innerText = t.name;
+                div.addEventListener('click', () => {
+                    document.getElementById('theme-display').innerText = t.name;
+                    document.getElementById('theme-select').value = key;
+                    applyTheme(key);
+                    document.getElementById('theme-selector').classList.remove('active');
+                });
+                list.appendChild(div);
+            }
+        }
+
+        function initThemeSelector() {
+            const selector = document.getElementById('theme-selector');
+            const selected = selector.querySelector('.select-selected');
+            
+            selected.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selector.classList.toggle('active');
+            });
+            
+            document.addEventListener('click', () => selector.classList.remove('active'));
+
+            const savedTheme = localStorage.getItem('bpmAnalyzerTheme') || 
+                               (localStorage.getItem('unifiedWriterPrefs') ? JSON.parse(localStorage.getItem('unifiedWriterPrefs')).theme : null) || 
+                               'zone-night';
+            
+            if (themes[savedTheme]) {
+                document.getElementById('theme-display').innerText = themes[savedTheme].name;
+                document.getElementById('theme-select').value = savedTheme;
+                applyTheme(savedTheme);
+            }
+        }
+
+        /* ANALYZER LOGIC */
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const status = document.getElementById('status');
+        const resultContainer = document.getElementById('result-container');
+        const bpmOutput = document.getElementById('bpm-output');
+        const fileName = document.getElementById('file-name');
+
+        let currentBPM = 120;
+
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('hover'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('hover'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            fileName.textContent = file.name;
+            status.textContent = "Loading audio...";
+            resultContainer.style.display = "none";
+            dropZone.style.display = "none";
+
+            const reader = new FileReader();
+            reader.onload = (e) => analyzeAudio(e.target.result);
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function analyzeAudio(arrayBuffer) {
+            status.textContent = "Decoding...";
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioContext();
+
+            try {
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                status.textContent = "Analyzing peaks...";
+
+                const channelData = audioBuffer.getChannelData(0);
+                const sampleRate = audioBuffer.sampleRate;
+
+                currentBPM = calculateBPM(channelData, sampleRate);
+
+                status.textContent = "";
+                bpmOutput.textContent = currentBPM;
+                resultContainer.style.display = "block";
+            } catch (error) {
+                status.textContent = "Error decoding audio.";
+                dropZone.style.display = "block";
+            } finally {
+                audioCtx.close();
+            }
+        }
+
+        function calculateBPM(data, sampleRate) {
+            const peaks = [];
+            let threshold = 0.70;
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.abs(data[i]) > threshold) {
+                    peaks.push(i);
+                    i += 4410;
+                }
+            }
+
+            const counts = {};
+            for (let i = 0; i < peaks.length; i++) {
+                for (let j = 1; j < 10; j++) {
+                    if (i + j < peaks.length) {
+                        const interval = peaks[i + j] - peaks[i];
+                        let b = (60 * sampleRate) / interval;
+                        while (b < 90) b *= 2;
+                        while (b > 180) b /= 2;
+                        b = Math.round(b);
+                        counts[b] = (counts[b] || 0) + 1;
+                    }
+                }
+            }
+
+            let maxCount = 0;
+            let finalBPM = 120;
+            for (const bpm in counts) {
+                if (counts[bpm] > maxCount) {
+                    maxCount = counts[bpm];
+                    finalBPM = bpm;
+                }
+            }
+            return finalBPM;
+        }
+
+        function doubleBPM() { currentBPM = Math.round(currentBPM * 2); bpmOutput.textContent = currentBPM; }
+        function halveBPM() { currentBPM = Math.round(currentBPM / 2); bpmOutput.textContent = currentBPM; }
+        
+        function resetAnalyzer() {
+            resultContainer.style.display = "none";
+            dropZone.style.display = "block";
+            status.textContent = "";
+            fileInput.value = "";
+        }
+
+        /* INIT */
+        document.addEventListener('DOMContentLoaded', () => {
+            populateThemeList();
+            initThemeSelector();
+        });
+    </script>
+</body>
+
+</html>
