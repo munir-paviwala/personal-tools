@@ -309,9 +309,9 @@
         </div>
     </div>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/imgly-background-removal.js"></script>
-    <script>
+    <script type="module">
+        import imglyRemoveBackground from "https://esm.sh/@imgly/background-removal@1.4.5";
+
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
         const previewContainer = document.getElementById('preview-container');
