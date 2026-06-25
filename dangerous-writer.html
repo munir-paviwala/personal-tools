@@ -258,12 +258,12 @@
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
-            <h1 id="main-title">THE DANGEROUS WRITER</h1>
+            <h1 id="main-title">THE WRITER</h1>
 
             <div class="row">
                 <label>Duration:</label>
                 <div class="custom-select" data-target="timer-select">
-                    <div class="select-selected">5 Mins</div>
+                    <div class="select-selected">No Time Limit</div>
                     <div class="select-items">
                         <div data-value="1">1 Min</div>
                         <div data-value="2.83">2:50 (Sprint)</div>
@@ -273,26 +273,26 @@
                         <div data-value="custom">Custom...</div>
                     </div>
                 </div>
-                <input type="hidden" id="timer-select" value="5">
+                <input type="hidden" id="timer-select" value="infinite">
                 <input type="number" id="custom-time" class="hidden" placeholder="Minutes (e.g. 20)" min="1" style="margin-top: 5px;">
             </div>
             
             <div class="row">
                 <label>Visual Mode:</label>
                 <div class="custom-select" data-target="visual-mode">
-                    <div class="select-selected">Hardcore (Blur Text)</div>
+                    <div class="select-selected">Normal</div>
                     <div class="select-items">
                         <div data-value="normal">Normal</div>
                         <div data-value="blur">Hardcore (Blur Text)</div>
                     </div>
                 </div>
-                <input type="hidden" id="visual-mode" value="blur">
+                <input type="hidden" id="visual-mode" value="normal">
             </div>
 
             <div class="row">
                 <label>Consequence (Idle for 6s):</label>
                 <div class="custom-select" data-target="danger-mode">
-                    <div class="select-selected">Warning Only (Red glow)</div>
+                    <div class="select-selected">Safe (No pressure)</div>
                     <div class="select-items">
                         <div data-value="none">Safe (No pressure)</div>
                         <div data-value="warning">Warning Only (Red glow)</div>
@@ -300,7 +300,7 @@
                         <div data-value="wipeout">Kamikaze (Deletes everything!)</div>
                     </div>
                 </div>
-                <input type="hidden" id="danger-mode" value="warning">
+                <input type="hidden" id="danger-mode" value="none">
             </div>
 
             <div class="row-inline" style="margin-top: 5px;">
@@ -429,18 +429,18 @@
             const savedPrefs = localStorage.getItem('unifiedWriterPrefs');
             if (savedPrefs) {
                 const prefs = JSON.parse(savedPrefs);
-                setCustomSelectValue('timer-select', prefs.timer || '5');
-                setCustomSelectValue('visual-mode', prefs.visual || 'blur');
-                setCustomSelectValue('danger-mode', prefs.danger || 'warning');
+                setCustomSelectValue('timer-select', prefs.timer || 'infinite');
+                setCustomSelectValue('visual-mode', prefs.visual || 'normal');
+                setCustomSelectValue('danger-mode', prefs.danger || 'none');
                 document.getElementById('music-toggle').checked = prefs.music !== false;
                 
                 const savedTheme = prefs.theme || 'zone-night';
                 setCustomSelectValue('theme-select', savedTheme, 'theme-selector', 'theme-display');
                 applyTheme(savedTheme);
             } else {
-                setCustomSelectValue('timer-select', '5');
-                setCustomSelectValue('visual-mode', 'blur');
-                setCustomSelectValue('danger-mode', 'warning');
+                setCustomSelectValue('timer-select', 'infinite');
+                setCustomSelectValue('visual-mode', 'normal');
+                setCustomSelectValue('danger-mode', 'none');
                 document.getElementById('music-toggle').checked = true;
                 applyTheme('zone-night');
             }
@@ -698,7 +698,6 @@
             isSessionActive = false; 
             vignette.classList.remove('warning-glow');
             document.getElementById('text-content').classList.remove('hardcore');
-            document.getElementById('cursor').classList.remove('active'); 
             toolbar.classList.add('visible');
         }
 
