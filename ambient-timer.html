@@ -616,6 +616,20 @@
             transform: none;
         }
 
+        .back-link {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--text);
+            text-decoration: none;
+            opacity: 0.6;
+            align-self: flex-start;
+            margin-bottom: -10px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
         @media (max-width: 600px) {
             .setup-box {
                 padding: 25px 20px;
@@ -630,6 +644,16 @@
             }
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+    </script>
 </head>
 
 <body>
@@ -703,6 +727,7 @@
 
     <div id="setup-screen" class="screen">
         <div class="setup-box">
+            <a href="index.html" class="back-link">← Back to Hub</a>
             <h1 id="main-title">AMBIENT TIMER</h1>
 
             <div class="row">

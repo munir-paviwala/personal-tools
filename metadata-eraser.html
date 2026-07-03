@@ -151,15 +151,29 @@
             transition: 0.1s;
             box-shadow: 4px 4px 0px black;
         }
+        .back-link {
+            display: inline-block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--white-silk);
+            text-decoration: none;
+            opacity: 0.8;
+            margin-bottom: 15px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
         @media (max-width: 600px) {
-    header { padding: 30px 20px; border-radius: 60px 60px 15px 15px; }
-    h1 { font-size: 2rem; }
-    #image-list { grid-template-columns: 1fr; } /* Forces a single column */
-    .image-card { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .image-preview { width: 100%; height: 150px; }
-    .actions { flex-direction: column; }
-    button { padding: 20px; } /* Larger tap targets */
-}
+            header { padding: 30px 20px; border-radius: 60px 60px 15px 15px; }
+            h1 { font-size: 2rem; }
+            #image-list { grid-template-columns: 1fr; } /* Forces a single column */
+            .image-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .image-preview { width: 100%; height: 150px; }
+            .actions { flex-direction: column; }
+            button { padding: 20px; } /* Larger tap targets */
+        }
 
         button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px black; }
         
@@ -167,10 +181,21 @@
         .btn-reset { background: var(--burnt-orange); color: white; }
         .hidden { display: none; }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+    </script>
 </head>
 <body>
 
     <header>
+        <a href="index.html" class="back-link">← Back to Hub</a>
         <h1>METADATA ERASER</h1>
         <p class="intro">
             Offline, browser-based metadata cleaner. No data shared. No ads. Just bright colors.

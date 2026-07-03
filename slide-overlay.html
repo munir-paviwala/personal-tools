@@ -899,6 +899,16 @@
         .mobile-warning h2 { font-size: 1.8rem; font-weight: 700; color: var(--marigold); }
         .mobile-warning p { color: var(--text-muted); line-height: 1.6; }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
+    }
+    </script>
 </head>
 <body>
 

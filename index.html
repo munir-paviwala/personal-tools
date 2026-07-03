@@ -7,8 +7,7 @@
     <title>Munir's Personal Tools Library</title>
     <link href="assets/css/space-grotesk.css" rel="stylesheet">
     <link href="assets/css/vt323.css" rel="stylesheet">
-    
-    <script src="assets/js/jszip.min.js"></script>
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --deep-indigo: #1a237e;
@@ -261,16 +260,8 @@
                 </div>
             </a>
 
-            <a href="bpm_calculator.html" class="tool-link">
-                <div class="tool-number">06</div>
-                <div class="tool-details">
-                    <span class="tool-title">BPM Analyzer</span>
-                    <span class="tool-desc">Extract the tempo of any audio track instantly and locally.</span>
-                </div>
-            </a>
-
             <a href="slide-overlay.html" class="tool-link">
-                <div class="tool-number">07</div>
+                <div class="tool-number">06</div>
                 <div class="tool-details">
                     <span class="tool-title">Slide Overlay Maker</span>
                     <span class="tool-desc">Apply textures and overlays to PDF presentations, per-slide or globally. Offline only.</span>
@@ -283,7 +274,7 @@
         &copy; 2026 // Built for personal utility<br><br>
         <div style="display:flex; justify-content:center; gap:10px;">
             <button onclick="wipeAllData()" style="background: var(--burnt-orange); color: var(--white-silk); padding: 10px; border: 2px solid var(--marigold); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase;">Wipe All Local Data</button>
-            <button onclick="downloadOffline()" style="background: var(--peacock); color: var(--deep-indigo); padding: 10px; border: 2px solid var(--white-silk); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold;">Download Offline Bundle</button>
+            <button id="install-btn" style="display: none; background: var(--peacock); color: var(--deep-indigo); padding: 10px; border: 2px solid var(--white-silk); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold;">Install Offline App</button>
         </div>
     </footer>
 
@@ -297,112 +288,45 @@
         }
     }
 
-    async function downloadOffline() {
-        const modalContainer = document.getElementById('download-modal-container');
-        modalContainer.innerHTML = `
-            <div class="download-modal">
-                <div class="download-modal-content">
-                    <h2 id="modal-title">PREPARING BUNDLE...</h2>
-                    <p id="modal-status">Gathering all the tools, fonts, and music for you.</p>
-                    <div class="download-progress"><div id="download-bar"></div></div>
-                    <button id="modal-close" class="hidden" onclick="this.closest('.download-modal').remove()" style="background: var(--peacock); color: var(--deep-indigo); padding: 10px 20px; border: none; cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold; font-size: 1.2rem;">Got it!</button>
-                </div>
-            </div>
-        `;
-
-        const files = [
-            'index.html',
-            'dangerous-writer.html',
-            'metadata-eraser.html',
-            'md-reader.html',
-            'ambient-timer.html',
-            'base64-coder.html',
-            'bpm_calculator.html',
-            'slide-overlay.html',
-            'LICENSE',
-            'assets/css/space-grotesk.css',
-            'assets/css/vt323.css',
-            'assets/js/jszip.min.js',
-            'assets/js/marked.min.js',
-            'assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-400-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-400-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-500-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-500-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-600-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-600-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-300-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-300-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-400-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-400-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-500-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-500-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-600-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-600-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-700-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-latin-ext-700-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-300-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-300-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-400-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-400-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-500-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-500-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-600-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-600-normal.woff2',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-700-normal.woff',
-            'assets/fonts/space-grotesk/space-grotesk-vietnamese-700-normal.woff2',
-            'assets/fonts/vt323/vt323-latin-400-normal.woff',
-            'assets/fonts/vt323/vt323-latin-400-normal.woff2',
-            'assets/fonts/vt323/vt323-latin-ext-400-normal.woff',
-            'assets/fonts/vt323/vt323-latin-ext-400-normal.woff2',
-            'assets/fonts/vt323/vt323-vietnamese-400-normal.woff',
-            'assets/fonts/vt323/vt323-vietnamese-400-normal.woff2',
-            'assets/music/audio1.mp3',
-            'assets/music/audio2.mp3',
-            'assets/music/audio3.mp3',
-            'assets/music/audio4.mp3'
-        ];
-
-        const zip = new JSZip();
-        const bar = document.getElementById('download-bar');
-        const status = document.getElementById('modal-status');
-        
-        try {
-            for (let i = 0; i < files.length; i++) {
-                const filePath = files[i];
-                status.innerText = `Fetching: ${filePath}`;
-                const response = await fetch(filePath);
-                if (!response.ok) throw new Error(`Failed to fetch ${filePath}`);
-                const blob = await response.blob();
-                
-                // Rename index.html to Launch Tools.html for non-technical users
-                const zipPath = filePath === 'index.html' ? 'Launch Tools.html' : filePath;
-                zip.file(zipPath, blob);
-                
-                bar.style.width = `${((i + 1) / files.length) * 100}%`;
-            }
-
-            status.innerText = "Compressing bundle...";
-            const content = await zip.generateAsync({type: "blob"});
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = "Munirs_Tools_Library.zip";
-            link.click();
-
-            document.getElementById('modal-title').innerText = "DOWNLOAD COMPLETE!";
-            status.innerHTML = "<strong>Next Steps:</strong><br>1. Unzip the file you just downloaded.<br>2. Open <strong>'Launch Tools.html'</strong> in your browser.<br>3. Bookmark it to use your tools offline anytime!";
-            document.getElementById('modal-close').classList.remove('hidden');
-
-        } catch (err) {
-            console.error(err);
-            status.innerText = "Error creating bundle. Please try again.";
-            document.getElementById('modal-close').classList.remove('hidden');
-        }
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                .catch(err => console.error('Service Worker registration failed:', err));
+        });
     }
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+        // Update UI to notify the user they can install the PWA
+        installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        // Show the prompt
+        deferredPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        // We've used the prompt, and can't use it again
+        deferredPrompt = null;
+        // Hide the install button
+        installBtn.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('PWA was installed successfully!');
+        installBtn.style.display = 'none';
+    });
     </script>
 </body>
 </html>
