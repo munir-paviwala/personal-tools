@@ -1,4 +1,4 @@
-const CACHE_NAME = 'munir-tools-cache-v2';
+const CACHE_NAME = 'munir-tools-cache-v3';
 const PRECACHE_ASSETS = [
   './',
   'index.html',
@@ -102,6 +102,10 @@ self.addEventListener('fetch', event => {
     caches.match(event.request)
       .then(cachedResponse => {
         if (cachedResponse) {
+          // Handle range requests for media files (audio/video)
+          if (event.request.headers.has('range')) {
+            return handleRangeRequest(event.request, cachedResponse);
+          }
           return cachedResponse;
         }
 
@@ -122,3 +126,34 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+// Helper to construct a 206 Partial Content response for media files
+function handleRangeRequest(request, cachedResponse) {
+  const rangeHeader = request.headers.get('range');
+  if (!rangeHeader) {
+    return cachedResponse;
+  }
+
+  return cachedResponse.arrayBuffer().then(arrayBuffer => {
+    const bytes = /^bytes=(\d+)-(\d+)?$/g.exec(rangeHeader);
+    if (bytes) {
+      const start = parseInt(bytes[1], 10);
+      const end = bytes[2] ? parseInt(bytes[2], 10) : arrayBuffer.byteLength - 1;
+
+      // Slice the buffer according to the range
+      const slicedBuffer = arrayBuffer.slice(start, end + 1);
+      const responseHeaders = new Headers(cachedResponse.headers);
+      
+      responseHeaders.set('Content-Range', `bytes ${start}-${end}/${arrayBuffer.byteLength}`);
+      responseHeaders.set('Content-Length', slicedBuffer.byteLength);
+
+      return new Response(slicedBuffer, {
+        status: 206,
+        statusText: 'Partial Content',
+        headers: responseHeaders
+      });
+    }
+
+    return cachedResponse;
+  });
+}
