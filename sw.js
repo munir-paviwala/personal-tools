@@ -1,11 +1,10 @@
-const CACHE_NAME = 'munir-tools-cache-v4';
+const CACHE_NAME = 'munir-tools-cache-v5';
 const PRECACHE_ASSETS = [
   './',
   'index.html',
   'dangerous-writer.html',
   'metadata-eraser.html',
   'md-reader.html',
-  'djvu-reader.html',
   'ambient-timer.html',
   'base64-coder.html',
   'slide-overlay.html',
@@ -17,8 +16,6 @@ const PRECACHE_ASSETS = [
   'assets/css/vt323.css',
   'assets/js/marked.min.js',
   'assets/js/jszip.min.js',
-  'assets/js/djvu.js',
-  'assets/js/djvu_viewer.js',
   
   // Fonts
   'assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff',
