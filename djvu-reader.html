@@ -685,7 +685,8 @@
 
             currentViewer.loadDocument(arrayBuffer, fileName).then(() => {
                 const state = currentViewer.store.getState();
-                totalPages = DjVu.get.pagesQuantity(state) || 1;
+                const getSelector = DjVu.Viewer ? DjVu.Viewer.get : DjVu.get;
+                totalPages = getSelector ? (getSelector.pagesQuantity(state) || 1) : 1;
                 document.getElementById('text-page-count').innerText = `/ ${totalPages}`;
                 document.getElementById('input-page-num').max = totalPages;
 
@@ -975,7 +976,8 @@
         document.getElementById('btn-zoom-in').addEventListener('click', () => {
             if (currentViewer) {
                 const state = currentViewer.store.getState();
-                const scale = DjVu.get.userScale(state) || 1.0;
+                const getSelector = DjVu.Viewer ? DjVu.Viewer.get : DjVu.get;
+                const scale = getSelector ? (getSelector.userScale(state) || 1.0) : 1.0;
                 currentViewer.configure({ pageScale: scale * 1.25 });
             }
         });
@@ -983,7 +985,8 @@
         document.getElementById('btn-zoom-out').addEventListener('click', () => {
             if (currentViewer) {
                 const state = currentViewer.store.getState();
-                const scale = DjVu.get.userScale(state) || 1.0;
+                const getSelector = DjVu.Viewer ? DjVu.Viewer.get : DjVu.get;
+                const scale = getSelector ? (getSelector.userScale(state) || 1.0) : 1.0;
                 currentViewer.configure({ pageScale: scale / 1.25 });
             }
         });
@@ -991,7 +994,8 @@
         document.getElementById('btn-rotate').addEventListener('click', () => {
             if (currentViewer) {
                 const state = currentViewer.store.getState();
-                const rot = DjVu.get.pageRotation(state) || 0;
+                const getSelector = DjVu.Viewer ? DjVu.Viewer.get : DjVu.get;
+                const rot = getSelector ? (getSelector.pageRotation(state) || 0) : 0;
                 currentViewer.configure({ pageRotation: (rot + 90) % 360 });
             }
         });
