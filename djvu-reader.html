@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>DJVU Reader</title>
+    <link href="assets/css/space-grotesk.css" rel="stylesheet">
+    <link href="assets/css/vt323.css" rel="stylesheet">
+    <script src="assets/js/djvu.js"></script>
+    <script src="assets/js/djvu_viewer.js"></script>
+    <style>
+        :root {
+            /* Theme defaults to The Zone Night */
+            --bg: #121212; 
+            --text: #e0e0e0; 
+            --accent: #333333; 
+            --bar: #ffffff;
+            --box-bg: rgba(255, 255, 255, 0.03); 
+            --toolbar-bg: rgba(18, 18, 18, 0.95);
+            --danger: #ff4757;
+            --success: #2ed573;
+            --primary: #00bcd4;
+            --highlight-yellow: rgba(255, 234, 167, 0.45);
+            --highlight-green: rgba(85, 239, 196, 0.45);
+            --highlight-pink: rgba(253, 121, 168, 0.45);
+            --highlight-cyan: rgba(129, 236, 236, 0.45);
+            --font-body: 'Space Grotesk', ui-monospace, SFMono-Regular, monospace;
+            --font-heading: 'VT323', monospace;
+            --border-w: 2px;
+            --shadow-offset: 4px;
+            --transition-speed: 0.3s;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            margin: 0; padding: 0; 
+            background: var(--bg); color: var(--text); 
+            font-family: var(--font-body); 
+            overflow-x: hidden; 
+            min-height: 100vh;
+            transition: background var(--transition-speed), color var(--transition-speed); 
+        }
+
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* SCREENS */
+        .screen { 
+            position: absolute; inset: 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 20; min-height: 100vh; padding: 20px; 
+            transition: opacity 0.4s ease; 
+        }
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+        /* SETUP SCREEN */
+        .setup-box { 
+            padding: 35px; 
+            border-radius: 12px;
+            border: var(--border-w) solid var(--accent); 
+            background: var(--box-bg); 
+            display: flex; flex-direction: column; gap: 20px; align-items: center; 
+            width: 580px; max-width: 100%; 
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar); 
+            backdrop-filter: blur(12px);
+            position: relative;
+        }
+
+        .hub-link {
+            align-self: flex-start;
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        h1 { 
+            font-family: var(--font-heading); 
+            font-weight: normal; letter-spacing: 2px; margin: 0; 
+            font-size: 3rem; text-align: center; 
+            color: var(--text);
+            line-height: 1; 
+        }
+        
+        .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            text-align: center;
+            margin-top: -10px;
+        }
+
+        .row { display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; width: 100%; align-items: flex-start; font-weight: bold; }
+        
+        button { 
+            width: 100%; padding: 12px 16px; 
+            background: var(--bg); border: var(--border-w) solid var(--accent); 
+            color: var(--text); cursor: pointer; 
+            border-radius: 6px; 
+            font-family: var(--font-heading); font-size: 1.2rem; 
+            box-shadow: 3px 3px 0px var(--bar);
+            transition: all 0.15s ease-in-out; outline: none; 
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        button:hover { 
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--bar);
+            background: var(--accent); color: var(--text); 
+        }
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--bar);
+        }
+
+        /* CUSTOM SELECT */
+        .custom-select { position: relative; width: 100%; font-family: var(--font-body); }
+        .select-selected { 
+            padding: 12px 16px; border: var(--border-w) solid var(--accent); 
+            border-radius: 6px;
+            background: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center; 
+            user-select: none; font-size: 1rem; font-weight: bold;
+        }
+        .select-selected:hover { background: var(--accent); }
+        .select-selected::after { content: '▼'; font-size: 0.7rem; opacity: 0.8; transition: transform 0.2s; }
+        .custom-select.active .select-selected::after { transform: rotate(180deg); }
+        
+        .select-items { 
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 99; margin-top: 5px; 
+            background: var(--bg); border: var(--border-w) solid var(--accent); 
+            border-radius: 6px;
+            max-height: 250px; overflow-y: auto; 
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--bar); 
+            display: none; 
+        }
+        .custom-select.active .select-items { display: block; }
+        .select-items div { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--accent); font-weight: bold; }
+        .select-items div:last-child { border-bottom: none; }
+        .select-items div:hover { background: var(--accent); }
+
+        #drop-zone {
+            width: 100%;
+            height: 140px;
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            color: var(--text);
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        #drop-zone.drag-over {
+            background: var(--accent);
+            border-style: solid;
+            transform: scale(1.01);
+        }
+        #file-input { display: none; }
+
+        /* RECENT FILES LIST */
+        .recent-files-section { width: 100%; margin-top: 10px; }
+        .recent-files-title { font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .clear-history-btn { font-size: 0.8rem; padding: 3px 8px; width: auto; border-width: 1px; box-shadow: none; }
+        
+        .recent-files-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .recent-card {
+            padding: 12px 14px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .recent-card:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        .recent-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; flex-grow: 1; }
+        .recent-name { font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .recent-meta { font-size: 0.8rem; opacity: 0.75; display: flex; gap: 12px; }
+        .recent-progress-bar { height: 4px; background: var(--accent); border-radius: 2px; overflow: hidden; width: 100%; margin-top: 2px; }
+        .recent-progress-fill { height: 100%; background: var(--primary); width: 0%; }
+        .recent-remove { background: transparent; border: none; box-shadow: none; color: var(--danger); width: auto; padding: 4px 8px; font-size: 1.2rem; opacity: 0.7; }
+        .recent-remove:hover { opacity: 1; background: transparent; transform: scale(1.1); box-shadow: none; }
+
+        /* READER SCREEN */
+        #reader-screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg);
+            z-index: 10;
+        }
+
+        .reader-header {
+            height: 54px;
+            background: var(--toolbar-bg);
+            border-bottom: var(--border-w) solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            gap: 15px;
+            z-index: 300;
+            backdrop-filter: blur(10px);
+        }
+
+        .toolbar-group { display: flex; align-items: center; gap: 8px; }
+
+        .icon-btn {
+            width: 36px; height: 36px;
+            padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            border-radius: 4px;
+            box-shadow: 2px 2px 0px var(--bar);
+        }
+        .icon-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--bar);
+        }
+
+        .doc-title-text {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        .page-num-input {
+            width: 50px;
+            padding: 4px 6px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .page-count-text { font-size: 0.9rem; opacity: 0.8; font-weight: bold; }
+
+        .toolbar-select {
+            padding: 6px 10px;
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            color: var(--text);
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* VIEWER AREA */
+        .viewer-body {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 54px);
+            overflow: hidden;
+            display: flex;
+        }
+
+        #djvu-viewer-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* ANNOTATION OVERLAY */
+        #annotation-canvas-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        .annotation-item-rect {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: outline 0.15s ease;
+        }
+        .annotation-item-rect:hover {
+            outline: 2px solid var(--primary);
+        }
+        .annotation-highlight {
+            border-radius: 3px;
+            mix-blend-mode: multiply;
+        }
+        .annotation-box {
+            border: 2px dashed var(--primary);
+            background: rgba(0, 188, 212, 0.08);
+            border-radius: 4px;
+        }
+        .annotation-badge {
+            position: absolute;
+            top: -10px; right: -10px;
+            background: var(--primary);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* SIDEBAR ANNOTATIONS */
+        #annotations-sidebar {
+            width: 320px;
+            height: 100%;
+            background: var(--toolbar-bg);
+            border-left: var(--border-w) solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            z-index: 250;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        #annotations-sidebar.closed {
+            display: none;
+        }
+
+        .sidebar-header {
+            padding: 14px 16px;
+            border-bottom: var(--border-w) solid var(--accent);
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+        }
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .annotation-card {
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex; flex-direction: column; gap: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .annotation-card:hover { border-color: var(--primary); }
+        .annotation-card-meta { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.8; font-weight: bold; }
+        .annotation-card-note { font-size: 0.9rem; line-height: 1.3; word-break: break-word; }
+        .annotation-card-color { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+        /* MODAL FOR NOTES */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+        .modal-card {
+            background: var(--bg);
+            border: var(--border-w) solid var(--accent);
+            box-shadow: 8px 8px 0px var(--bar);
+            border-radius: 8px;
+            padding: 24px;
+            width: 420px;
+            max-width: 90%;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .modal-title { font-family: var(--font-heading); font-size: 1.8rem; margin: 0; }
+        .modal-textarea {
+            width: 100%; height: 100px;
+            padding: 10px;
+            background: var(--box-bg);
+            border: var(--border-w) solid var(--accent);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        /* DRAWING OVERLAY FOR HIGHLIGHT / BOX */
+        .drawing-canvas-active {
+            pointer-events: auto !important;
+            cursor: crosshair !important;
+        }
+
+        .selection-preview-box {
+            position: absolute;
+            border: 2px dashed var(--primary);
+            background: rgba(0, 188, 212, 0.15);
+            pointer-events: none;
+            z-index: 500;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen" class="screen">
+        <div class="setup-box">
+            <a href="index.html" class="hub-link">◀ Back to Hub</a>
+            
+            <h1>DJVU READER</h1>
+            <p class="subtitle">Offline DjVu document viewer with highlighting, box annotations, notes, and local history memory.</p>
+
+            <div id="drop-zone">
+                <span style="font-size: 2rem;">📄</span>
+                <span>DRAG & DROP .DJVU FILE HERE</span>
+                <span style="font-size: 0.85rem; opacity: 0.7; font-family: var(--font-body);">or click to browse local files</span>
+            </div>
+            <input type="file" id="file-input" accept=".djvu,.djv">
+
+            <div class="row">
+                <label>Theme</label>
+                <div class="custom-select" id="theme-select-wrapper">
+                    <div class="select-selected" id="theme-display">The Zone Night</div>
+                    <div class="select-items" id="theme-options"></div>
+                </div>
+            </div>
+
+            <!-- RECENT FILES LIST -->
+            <div class="recent-files-section">
+                <div class="recent-files-title">
+                    <span>Recent Reading History</span>
+                    <button class="clear-history-btn" id="clear-history-btn">Clear History</button>
+                </div>
+                <div class="recent-files-list" id="recent-files-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- READER SCREEN -->
+    <div id="reader-screen" class="hidden">
+        <!-- TOOLBAR -->
+        <div class="reader-header">
+            <div class="toolbar-group">
+                <button class="icon-btn" id="btn-back-setup" title="Back to Setup">◀</button>
+                <div class="doc-title-text" id="doc-title">Document</div>
+            </div>
+
+            <!-- PAGE CONTROLS -->
+            <div class="toolbar-group">
+                <button class="icon-btn" id="btn-prev-page" title="Previous Page">▲</button>
+                <input type="number" id="input-page-num" class="page-num-input" value="1" min="1">
+                <span class="page-count-text" id="text-page-count">/ 1</span>
+                <button class="icon-btn" id="btn-next-page" title="Next Page">▼</button>
+            </div>
+
+            <!-- ANNOTATION TOOLS -->
+            <div class="toolbar-group">
+                <button class="icon-btn" id="tool-highlight" title="Highlight Tool (Drag on page)">🖊️</button>
+                <select id="color-select" class="toolbar-select" title="Highlight Color">
+                    <option value="yellow">🟡 Yellow</option>
+                    <option value="green">🟢 Green</option>
+                    <option value="pink">🌸 Pink</option>
+                    <option value="cyan">🩵 Cyan</option>
+                </select>
+
+                <button class="icon-btn" id="tool-box" title="Box Selection Tool (Drag box on page)">🔲</button>
+                <button class="icon-btn" id="tool-sidebar-toggle" title="Toggle Annotations Sidebar">📝 <span id="badge-anno-count">0</span></button>
+            </div>
+
+            <!-- VIEW MODE & ROTATION -->
+            <div class="toolbar-group">
+                <select id="select-view-mode" class="toolbar-select">
+                    <option value="1">Single Page</option>
+                    <option value="2">Continuous Scroll</option>
+                    <option value="3">Text Mode</option>
+                </select>
+
+                <button class="icon-btn" id="btn-zoom-in" title="Zoom In">🔍+</button>
+                <button class="icon-btn" id="btn-zoom-out" title="Zoom Out">🔍-</button>
+                <button class="icon-btn" id="btn-rotate" title="Rotate Page">🔄</button>
+            </div>
+        </div>
+
+        <!-- VIEWER AREA -->
+        <div class="viewer-body">
+            <div id="djvu-viewer-container"></div>
+            <div id="annotation-canvas-layer"></div>
+
+            <!-- ANNOTATIONS SIDEBAR -->
+            <div id="annotations-sidebar" class="closed">
+                <div class="sidebar-header">
+                    <span>Annotations & Notes</span>
+                    <button class="icon-btn" id="btn-close-sidebar" style="width:28px;height:28px;">×</button>
+                </div>
+                <div class="sidebar-list" id="sidebar-annotations-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTE EDIT MODAL -->
+    <div id="note-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2 class="modal-title" id="modal-note-title">Annotation Note</h2>
+            <textarea id="modal-note-input" class="modal-textarea" placeholder="Type your note or comment here..."></textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="btn-delete-annotation" style="background: var(--danger); color: #fff; width: auto;">Delete</button>
+                <button id="btn-save-note" style="background: var(--primary); color: #000; width: auto;">Save Note</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* THEME SYSTEM */
+        const THEMES = {
+            'zone-night': { name: 'The Zone Night', bg: '#121212', text: '#e0e0e0', accent: '#333333', bar: '#ffffff', boxBg: 'rgba(255,255,255,0.03)', toolbarBg: 'rgba(18,18,18,0.95)', primary: '#00bcd4' },
+            'cyber-neon': { name: 'Cyber Neon', bg: '#0d0221', text: '#00f6ff', accent: '#261447', bar: '#ff007f', boxBg: 'rgba(255,0,127,0.05)', toolbarBg: 'rgba(13,2,33,0.95)', primary: '#ff007f' },
+            'sepia-parchment': { name: 'Sepia Parchment', bg: '#fbf0d9', text: '#5f4b32', accent: '#e2d5b7', bar: '#5f4b32', boxBg: 'rgba(95,75,50,0.05)', toolbarBg: 'rgba(251,240,217,0.95)', primary: '#bf360c' },
+            'retro-90s': { name: 'Retro 90s Marigold', bg: '#1a237e', text: '#f1f1f1', accent: '#bf360c', bar: '#ffc107', boxBg: 'rgba(255,193,7,0.08)', toolbarBg: 'rgba(26,35,126,0.95)', primary: '#ffc107' },
+            'light-silk': { name: 'Light Silk', bg: '#f5f6fa', text: '#2f3640', accent: '#dcdde1', bar: '#2f3640', boxBg: 'rgba(0,0,0,0.03)', toolbarBg: 'rgba(245,246,250,0.95)', primary: '#0097e6' }
+        };
+
+        function applyTheme(themeKey) {
+            const t = THEMES[themeKey] || THEMES['zone-night'];
+            const root = document.documentElement;
+            root.style.setProperty('--bg', t.bg);
+            root.style.setProperty('--text', t.text);
+            root.style.setProperty('--accent', t.accent);
+            root.style.setProperty('--bar', t.bar);
+            root.style.setProperty('--box-bg', t.boxBg);
+            root.style.setProperty('--toolbar-bg', t.toolbarBg);
+            root.style.setProperty('--primary', t.primary);
+            localStorage.setItem('djvuReaderTheme', themeKey);
+        }
+
+        /* STATE MANAGEMENT */
+        let currentViewer = null;
+        let currentDocumentName = '';
+        let totalPages = 1;
+        let currentPage = 1;
+        let activeTool = null; // 'highlight' | 'box' | null
+        let annotations = []; // array of { id, type, color, page, x, y, w, h, note, createdAt }
+        let selectedAnnotationId = null;
+        let recentHistory = []; // array of { name, lastPage, totalPages, timestamp }
+
+        const MAX_HISTORY = 10;
+        const HIGHLIGHT_COLORS = {
+            yellow: 'rgba(255, 234, 167, 0.45)',
+            green: 'rgba(85, 239, 196, 0.45)',
+            pink: 'rgba(253, 121, 168, 0.45)',
+            cyan: 'rgba(129, 236, 236, 0.45)'
+        };
+
+        /* LOCALSTORAGE HISTORY & ANNOTATIONS */
+        function loadHistory() {
+            try {
+                recentHistory = JSON.parse(localStorage.getItem('djvu_reader_history') || '[]');
+            } catch(e) { recentHistory = []; }
+            renderHistoryList();
+        }
+
+        function saveHistory() {
+            localStorage.setItem('djvu_reader_history', JSON.stringify(recentHistory));
+        }
+
+        function updateDocumentProgress(docName, page, total) {
+            if (!docName) return;
+            const index = recentHistory.findIndex(item => item.name === docName);
+            const record = {
+                name: docName,
+                lastPage: page,
+                totalPages: total,
+                timestamp: Date.now()
+            };
+            if (index >= 0) {
+                recentHistory.splice(index, 1);
+            }
+            recentHistory.unshift(record);
+            if (recentHistory.length > MAX_HISTORY) recentHistory = recentHistory.slice(0, MAX_HISTORY);
+            saveHistory();
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const listEl = document.getElementById('recent-files-list');
+            listEl.innerHTML = '';
+            if (recentHistory.length === 0) {
+                listEl.innerHTML = '<div style="font-size:0.85rem; opacity:0.6; text-align:center; padding:10px;">No recent files found</div>';
+                return;
+            }
+            recentHistory.forEach((item) => {
+                const percent = Math.round((item.lastPage / item.totalPages) * 100) || 0;
+                const dateStr = new Date(item.timestamp).toLocaleDateString();
+                
+                const card = document.createElement('div');
+                card.className = 'recent-card';
+                card.innerHTML = `
+                    <div class="recent-info">
+                        <span class="recent-name" title="${item.name}">${item.name}</span>
+                        <div class="recent-meta">
+                            <span>Page ${item.lastPage} of ${item.totalPages} (${percent}%)</span>
+                            <span>${dateStr}</span>
+                        </div>
+                        <div class="recent-progress-bar">
+                            <div class="recent-progress-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                    <button class="recent-remove" title="Remove from history">×</button>
+                `;
+                
+                card.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('recent-remove')) return;
+                    alert(`To reopen "${item.name}" at Page ${item.lastPage}, please select the file from your computer.`);
+                    document.getElementById('file-input').click();
+                });
+
+                card.querySelector('.recent-remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    recentHistory = recentHistory.filter(r => r.name !== item.name);
+                    saveHistory();
+                    renderHistoryList();
+                });
+
+                listEl.appendChild(card);
+            });
+        }
+
+        function loadAnnotations(docName) {
+            try {
+                annotations = JSON.parse(localStorage.getItem(`djvu_anno_${docName}`) || '[]');
+            } catch(e) { annotations = []; }
+            renderAnnotationsOverlay();
+            renderAnnotationsSidebar();
+        }
+
+        function saveAnnotations() {
+            if (!currentDocumentName) return;
+            localStorage.setItem(`djvu_anno_${currentDocumentName}`, JSON.stringify(annotations));
+            renderAnnotationsOverlay();
+            renderAnnotationsSidebar();
+        }
+
+        /* DJVU VIEWER INITIALIZATION */
+        function initDjVuViewer(arrayBuffer, fileName) {
+            currentDocumentName = fileName;
+            document.getElementById('doc-title').innerText = fileName;
+            
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('reader-screen').classList.remove('hidden');
+
+            const container = document.getElementById('djvu-viewer-container');
+            container.innerHTML = ''; // clear previous
+
+            currentViewer = new DjVu.Viewer();
+            currentViewer.render(container);
+
+            currentViewer.loadDocument(arrayBuffer, fileName).then(() => {
+                const state = currentViewer.store.getState();
+                totalPages = DjVu.get.pagesQuantity(state) || 1;
+                document.getElementById('text-page-count').innerText = `/ ${totalPages}`;
+                document.getElementById('input-page-num').max = totalPages;
+
+                // Check saved progress
+                const saved = recentHistory.find(h => h.name === fileName);
+                if (saved && saved.lastPage > 1 && saved.lastPage <= totalPages) {
+                    currentViewer.configure({ pageNumber: saved.lastPage });
+                    currentPage = saved.lastPage;
+                } else {
+                    currentPage = 1;
+                }
+                document.getElementById('input-page-num').value = currentPage;
+                updateDocumentProgress(fileName, currentPage, totalPages);
+                loadAnnotations(fileName);
+            }).catch(err => {
+                alert('Error loading DJVU document: ' + err.message);
+                showSetup();
+            });
+
+            // Listen for page changes
+            currentViewer.on(DjVu.Viewer.Events.PAGE_NUMBER_CHANGED, () => {
+                currentPage = currentViewer.getPageNumber() || 1;
+                document.getElementById('input-page-num').value = currentPage;
+                updateDocumentProgress(currentDocumentName, currentPage, totalPages);
+                renderAnnotationsOverlay();
+            });
+        }
+
+        function showSetup() {
+            document.getElementById('reader-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            if (currentViewer) {
+                currentViewer.destroy();
+                currentViewer = null;
+            }
+        }
+
+        /* ANNOTATION DRAWING OVERLAY & EVENTS */
+        let isDrawing = false;
+        let startX = 0, startY = 0;
+        let previewBox = null;
+
+        const overlayLayer = document.getElementById('annotation-canvas-layer');
+
+        function setTool(toolName) {
+            if (activeTool === toolName) {
+                activeTool = null; // toggle off
+            } else {
+                activeTool = toolName;
+            }
+            document.getElementById('tool-highlight').classList.toggle('active', activeTool === 'highlight');
+            document.getElementById('tool-box').classList.toggle('active', activeTool === 'box');
+            
+            if (activeTool) {
+                overlayLayer.classList.add('drawing-canvas-active');
+            } else {
+                overlayLayer.classList.remove('drawing-canvas-active');
+            }
+        }
+
+        overlayLayer.addEventListener('mousedown', (e) => {
+            if (!activeTool) return;
+            isDrawing = true;
+            const rect = overlayLayer.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+
+            previewBox = document.createElement('div');
+            previewBox.className = 'selection-preview-box';
+            previewBox.style.left = `${startX}px`;
+            previewBox.style.top = `${startY}px`;
+            overlayLayer.appendChild(previewBox);
+        });
+
+        overlayLayer.addEventListener('mousemove', (e) => {
+            if (!isDrawing || !previewBox) return;
+            const rect = overlayLayer.getBoundingClientRect();
+            const curX = e.clientX - rect.left;
+            const curY = e.clientY - rect.top;
+
+            const x = Math.min(startX, curX);
+            const y = Math.min(startY, curY);
+            const w = Math.abs(curX - startX);
+            const h = Math.abs(curY - startY);
+
+            previewBox.style.left = `${x}px`;
+            previewBox.style.top = `${y}px`;
+            previewBox.style.width = `${w}px`;
+            previewBox.style.height = `${h}px`;
+        });
+
+        overlayLayer.addEventListener('mouseup', (e) => {
+            if (!isDrawing || !previewBox) return;
+            isDrawing = false;
+            const rect = overlayLayer.getBoundingClientRect();
+            const curX = e.clientX - rect.left;
+            const curY = e.clientY - rect.top;
+
+            const x = Math.min(startX, curX);
+            const y = Math.min(startY, curY);
+            const w = Math.abs(curX - startX);
+            const h = Math.abs(curY - startY);
+
+            overlayLayer.removeChild(previewBox);
+            previewBox = null;
+
+            if (w > 10 && h > 10) {
+                const colorKey = document.getElementById('color-select').value;
+                const newAnno = {
+                    id: 'anno_' + Date.now(),
+                    type: activeTool, // 'highlight' or 'box'
+                    color: colorKey,
+                    page: currentPage,
+                    x: Math.round(x),
+                    y: Math.round(y),
+                    w: Math.round(w),
+                    h: Math.round(h),
+                    note: '',
+                    createdAt: Date.now()
+                };
+                annotations.push(newAnno);
+                saveAnnotations();
+                openNoteModal(newAnno.id);
+            }
+            setTool(null); // deactivate tool after creation
+        });
+
+        function renderAnnotationsOverlay() {
+            overlayLayer.innerHTML = '';
+            const pageAnnos = annotations.filter(a => a.page === currentPage);
+            document.getElementById('badge-anno-count').innerText = annotations.length;
+
+            pageAnnos.forEach(anno => {
+                const el = document.createElement('div');
+                el.className = `annotation-item-rect ${anno.type === 'highlight' ? 'annotation-highlight' : 'annotation-box'}`;
+                el.style.left = `${anno.x}px`;
+                el.style.top = `${anno.y}px`;
+                el.style.width = `${anno.w}px`;
+                el.style.height = `${anno.h}px`;
+                
+                if (anno.type === 'highlight') {
+                    el.style.backgroundColor = HIGHLIGHT_COLORS[anno.color] || HIGHLIGHT_COLORS.yellow;
+                }
+
+                if (anno.note) {
+                    const badge = document.createElement('div');
+                    badge.className = 'annotation-badge';
+                    badge.innerText = '💬';
+                    el.appendChild(badge);
+                }
+
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openNoteModal(anno.id);
+                });
+
+                overlayLayer.appendChild(el);
+            });
+        }
+
+        function renderAnnotationsSidebar() {
+            const listEl = document.getElementById('sidebar-annotations-list');
+            listEl.innerHTML = '';
+            if (annotations.length === 0) {
+                listEl.innerHTML = '<div style="font-size:0.85rem; opacity:0.6; text-align:center; padding:20px;">No highlights or notes created yet. Use the 🖊️ or 🔲 tools to add annotations.</div>';
+                return;
+            }
+
+            annotations.forEach(anno => {
+                const card = document.createElement('div');
+                card.className = 'annotation-card';
+                const colorHex = anno.color === 'yellow' ? '#ffeaa7' : anno.color === 'green' ? '#55efc4' : anno.color === 'pink' ? '#fd79a8' : '#81ecec';
+                
+                card.innerHTML = `
+                    <div class="annotation-card-meta">
+                        <span>Page ${anno.page} • ${anno.type.toUpperCase()}</span>
+                        <span class="annotation-card-color" style="background:${colorHex};"></span>
+                    </div>
+                    <div class="annotation-card-note">${anno.note ? anno.note : '<em>No text note added</em>'}</div>
+                `;
+
+                card.addEventListener('click', () => {
+                    if (currentViewer && anno.page !== currentPage) {
+                        currentViewer.configure({ pageNumber: anno.page });
+                    }
+                    openNoteModal(anno.id);
+                });
+
+                listEl.appendChild(card);
+            });
+        }
+
+        /* NOTE MODAL */
+        function openNoteModal(id) {
+            selectedAnnotationId = id;
+            const anno = annotations.find(a => a.id === id);
+            if (!anno) return;
+            document.getElementById('modal-note-title').innerText = `${anno.type === 'highlight' ? 'Highlight' : 'Box Region'} Note (Page ${anno.page})`;
+            document.getElementById('modal-note-input').value = anno.note || '';
+            document.getElementById('note-modal').classList.remove('hidden');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.add('hidden');
+            selectedAnnotationId = null;
+        }
+
+        document.getElementById('btn-save-note').addEventListener('click', () => {
+            if (!selectedAnnotationId) return;
+            const anno = annotations.find(a => a.id === selectedAnnotationId);
+            if (anno) {
+                anno.note = document.getElementById('modal-note-input').value.trim();
+                saveAnnotations();
+            }
+            closeNoteModal();
+        });
+
+        document.getElementById('btn-delete-annotation').addEventListener('click', () => {
+            if (!selectedAnnotationId) return;
+            annotations = annotations.filter(a => a.id !== selectedAnnotationId);
+            saveAnnotations();
+            closeNoteModal();
+        });
+
+        /* FILE HANDLING */
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                initDjVuViewer(e.target.result, file.name);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        /* TOOLBAR CONTROLS */
+        document.getElementById('btn-back-setup').addEventListener('click', showSetup);
+
+        document.getElementById('btn-prev-page').addEventListener('click', () => {
+            if (currentViewer && currentPage > 1) {
+                currentViewer.configure({ pageNumber: currentPage - 1 });
+            }
+        });
+
+        document.getElementById('btn-next-page').addEventListener('click', () => {
+            if (currentViewer && currentPage < totalPages) {
+                currentViewer.configure({ pageNumber: currentPage + 1 });
+            }
+        });
+
+        document.getElementById('input-page-num').addEventListener('change', (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (currentViewer && val >= 1 && val <= totalPages) {
+                currentViewer.configure({ pageNumber: val });
+            }
+        });
+
+        document.getElementById('select-view-mode').addEventListener('change', (e) => {
+            const mode = parseInt(e.target.value, 10);
+            if (currentViewer) {
+                currentViewer.configure({ viewMode: mode });
+            }
+        });
+
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            if (currentViewer) {
+                const state = currentViewer.store.getState();
+                const scale = DjVu.get.userScale(state) || 1.0;
+                currentViewer.configure({ pageScale: scale * 1.25 });
+            }
+        });
+
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            if (currentViewer) {
+                const state = currentViewer.store.getState();
+                const scale = DjVu.get.userScale(state) || 1.0;
+                currentViewer.configure({ pageScale: scale / 1.25 });
+            }
+        });
+
+        document.getElementById('btn-rotate').addEventListener('click', () => {
+            if (currentViewer) {
+                const state = currentViewer.store.getState();
+                const rot = DjVu.get.pageRotation(state) || 0;
+                currentViewer.configure({ pageRotation: (rot + 90) % 360 });
+            }
+        });
+
+        document.getElementById('tool-highlight').addEventListener('click', () => setTool('highlight'));
+        document.getElementById('tool-box').addEventListener('click', () => setTool('box'));
+
+        document.getElementById('tool-sidebar-toggle').addEventListener('click', () => {
+            document.getElementById('annotations-sidebar').classList.toggle('closed');
+        });
+
+        document.getElementById('btn-close-sidebar').addEventListener('click', () => {
+            document.getElementById('annotations-sidebar').classList.add('closed');
+        });
+
+        document.getElementById('clear-history-btn').addEventListener('click', () => {
+            if (confirm('Clear all recent reading history?')) {
+                recentHistory = [];
+                saveHistory();
+                renderHistoryList();
+            }
+        });
+
+        /* THEME SELECTOR DROPDOWN */
+        function initThemeSelector() {
+            const display = document.getElementById('theme-display');
+            const optionsContainer = document.getElementById('theme-options');
+            const wrapper = document.getElementById('theme-select-wrapper');
+
+            optionsContainer.innerHTML = '';
+            Object.keys(THEMES).forEach(key => {
+                const item = document.createElement('div');
+                item.innerText = THEMES[key].name;
+                item.dataset.value = key;
+                item.addEventListener('click', () => {
+                    display.innerText = THEMES[key].name;
+                    applyTheme(key);
+                    wrapper.classList.remove('active');
+                });
+                optionsContainer.appendChild(item);
+            });
+
+            display.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wrapper.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('active');
+                }
+            });
+        }
+
+        /* INIT */
+        document.addEventListener('DOMContentLoaded', () => {
+            initThemeSelector();
+            const savedTheme = localStorage.getItem('djvuReaderTheme') || 'zone-night';
+            applyTheme(savedTheme);
+            if (THEMES[savedTheme]) {
+                document.getElementById('theme-display').innerText = THEMES[savedTheme].name;
+            }
+            loadHistory();
+        });
+
+    </script>
+</body>
+</html>
