@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Turn photos and cutouts into stickers with customizable white or colored borders, torn paper edges, and grain textures. Offline and browser-based.">
+  <title>Sticker & Paper Cutout Studio</title>
+  <style>
+    :root {
+      --bg: #141519;
+      --card: #1C1D22;
+      --card-border: #2E3038;
+      --text: #E6E8EE;
+      --text-muted: #8A8F9E;
+      --accent: #3A7DFF;
+      --stage-bg: #0B0C0E;
+      --dot-color: rgba(255, 255, 255, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .status-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+
+    .controls-panel {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      height: fit-content;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0px #000;
+      transition: all 0.1s ease;
+    }
+
+    .btn:hover {
+      background: #25272F;
+      border-color: #404350;
+    }
+
+    .btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000;
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .segmented-control {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--card-border);
+      background: #111215;
+    }
+
+    .segmented-control button {
+      background: transparent;
+      border: none;
+      padding: 8px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .segmented-control button.active {
+      background: var(--card-border);
+      color: var(--text);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--text);
+    }
+
+    .presets-grid,
+    .stage-presets {
+      display: grid;
+      gap: 6px;
+    }
+
+    .presets-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .stage-presets {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 4px;
+    }
+
+    .swatch {
+      height: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .swatch.active::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: bold;
+      color: #000;
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+    }
+
+    .custom-color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="color"] {
+      border: 1px solid var(--card-border);
+      width: 28px;
+      height: 28px;
+      background: none;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--text);
+      width: 14px;
+      height: 14px;
+    }
+
+    .preview-stage {
+      background-color: var(--stage-bg);
+      background-image: radial-gradient(var(--dot-color) 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      border: 1px solid var(--card-border);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 520px;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .preview-stage.drag-over {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 50px rgba(58, 125, 255, 0.25);
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 75vh;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    }
+
+    .empty-state {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.8;
+      pointer-events: none;
+    }
+
+    .shortcut-hint {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 2px;
+      color: var(--text);
+    }
+
+    .stage-controls {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SVG Filter for Torn Edge Distortion -->
+  <svg style="display: none;">
+    <defs>
+      <filter id="torn-edge-filter">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" result="noise" />
+        <feDisplacementMap id="displacement-map" in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R"
+          yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <a href="index.html" class="btn" style="text-decoration: none; padding: 6px 10px; font-size: 11px;">← HUB</a>
+      <h1>Sticker & Paper Cutout Studio</h1>
+    </div>
+    <span id="file-info" class="status-tag">Drag & Drop Multiple Files to Batch Process</span>
+  </header>
+
+  <div class="app-layout">
+    <div class="controls-panel">
+      <!-- Affinity Cutout Cheat Sheet -->
+      <details style="background: #111215; border: 1px solid var(--card-border); padding: 10px; font-size: 11px;">
+        <summary style="font-weight: bold; cursor: pointer; text-transform: uppercase; color: var(--text-muted);">
+          Affinity Cutout Workflow</summary>
+        <ol style="margin-top: 8px; padding-left: 16px; line-height: 1.6; color: var(--text);">
+          <li>Switch to <strong>Pixel</strong> Persona/Tab.</li>
+          <li>Press <strong>W</strong> to select <strong>Selection Brush Tool</strong> (or switch within the W menu).
+          </li>
+          <li>Make selection and press <code>Cmd + C</code> to copy.</li>
+          <li>Press <code>Cmd + Shift + N</code> to create a new layer and paste selection.</li>
+          <li>Export as PNG using top-right export button.</li>
+        </ol>
+      </details>
+      <div class="control-group">
+        <label>1. Source Image</label>
+        <button class="btn" onclick="document.getElementById('file-input').click()">Upload Image(s)</button>
+        <input type="file" id="file-input" accept="image/png, image/webp, image/jpeg" multiple>
+      </div>
+
+      <div class="control-group">
+        <label>2. Edge Style & Texture</label>
+        <div class="segmented-control">
+          <button id="btn-style-clean" class="active" onclick="setStyle('clean')">Clean</button>
+          <button id="btn-style-torn" onclick="setStyle('torn')">Torn Paper</button>
+        </div>
+        <div class="control-row" style="margin-top: 4px;">
+          <label style="color: var(--text); cursor: pointer;"><input type="checkbox" id="check-texture"
+              onchange="render()"> Apply Paper Grain</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-row">
+          <label>3. Outer Border</label>
+          <span id="val-width" style="font-size: 11px;">16px</span>
+        </div>
+        <input type="range" id="input-width" min="0" max="60" value="16" oninput="updateControls()">
+      </div>
+
+      <div class="control-group">
+        <div class="control-row">
+          <label>4. Inner Accent (Optional)</label>
+          <span id="val-inner-width" style="font-size: 11px;">0px</span>
+        </div>
+        <input type="range" id="input-inner-width" min="0" max="20" value="0" oninput="updateControls()">
+      </div>
+
+      <div class="control-group" id="group-roughness" style="display: none;">
+        <div class="control-row">
+          <label>Edge Roughness</label>
+          <span id="val-roughness" style="font-size: 11px;">12</span>
+        </div>
+        <input type="range" id="input-roughness" min="2" max="30" value="12" oninput="updateControls()">
+      </div>
+
+      <div class="control-group">
+        <label>5. Paper Color Presets</label>
+        <div class="presets-grid" id="main-color-presets">
+          <div class="swatch active" style="background: #FAF8F5;" onclick="setColor('#FAF8F5', this, false)"
+            title="Warm Cotton"></div>
+          <div class="swatch" style="background: #F5F0EB;" onclick="setColor('#F5F0EB', this, false)"
+            title="Cream Parchment"></div>
+          <div class="swatch" style="background: #E3DFD5;" onclick="setColor('#E3DFD5', this, false)"
+            title="Vintage Newspaper"></div>
+          <div class="swatch" style="background: #3B3835;" onclick="setColor('#3B3835', this, false)" title="Raw Kraft">
+          </div>
+          <div class="swatch" style="background: #111215;" onclick="setColor('#111215', this, false)"
+            title="Charcoal Ink"></div>
+          <div class="swatch" style="background: #FFFFFF;" onclick="setColor('#FFFFFF', this, false)"
+            title="Pure White"></div>
+          <div class="swatch" style="background: #F4D03F;" onclick="setColor('#F4D03F', this, false)"
+            title="Scrapbook Yellow"></div>
+          <div class="swatch" style="background: #E74C3C;" onclick="setColor('#E74C3C', this, false)"
+            title="Crimson Red"></div>
+          <div class="swatch" style="background: #2980B9;" onclick="setColor('#2980B9', this, false)"
+            title="Blueprint Blue"></div>
+          <div class="swatch" style="background: #27AE60;" onclick="setColor('#27AE60', this, false)"
+            title="Botanical Green"></div>
+          <div class="swatch" style="background: #E67E22;" onclick="setColor('#E67E22', this, false)"
+            title="Burnt Orange"></div>
+          <div class="swatch" style="background: #8E44AD;" onclick="setColor('#8E44AD', this, false)"
+            title="Deep Violet"></div>
+        </div>
+        <div class="control-row" style="margin-top: 4px;">
+          <div class="custom-color-wrap">
+            <input type="color" id="input-color-picker" value="#FAF8F5" onchange="setColor(this.value, null, false)">
+            <label>Outer Hex</label>
+          </div>
+          <div class="custom-color-wrap">
+            <input type="color" id="input-inner-picker" value="#FFFFFF" onchange="setColor(this.value, null, true)">
+            <label>Inner Hex</label>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-download" class="btn" style="margin-top: auto;" onclick="downloadPNG()" disabled>Export
+        PNG</button>
+    </div>
+
+    <div class="preview-stage" id="preview-stage">
+      <div id="empty-notice" class="empty-state">
+        Drop files here to process<br>or press <span class="shortcut-hint">Ctrl + V</span> / <span
+          class="shortcut-hint">Cmd + V</span>
+      </div>
+      <canvas id="main-canvas" style="display: none;"></canvas>
+
+      <div class="stage-controls">
+        <label>Slide Canvas Simulator</label>
+        <div class="stage-presets">
+          <div class="swatch active" style="background: #0B0C0E;" onclick="setStage('#0B0C0E', this, true)"
+            title="Dark Dot Matrix"></div>
+          <div class="swatch" style="background: #FAF8F5;" onclick="setStage('#FAF8F5', this, false)"
+            title="Off-White Slide"></div>
+          <div class="swatch" style="background: #DEE3E8;" onclick="setStage('#DEE3E8', this, false)"
+            title="Muted Slate Slide"></div>
+          <div class="swatch" style="background: #EFE6DD;" onclick="setStage('#EFE6DD', this, false)"
+            title="Kraft Slide"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let sourceImage = null;
+    let currentFileName = 'cutout';
+    let edgeStyle = 'clean';
+    let outerColor = '#FAF8F5';
+    let innerColor = '#FFFFFF';
+    let noisePattern = null;
+
+    const canvas = document.getElementById('main-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const stage = document.getElementById('preview-stage');
+
+    // Generate procedural noise pattern on load
+    function generateNoise() {
+      const nCanvas = document.createElement('canvas');
+      nCanvas.width = 128; nCanvas.height = 128;
+      const nCtx = nCanvas.getContext('2d');
+      const imgData = nCtx.createImageData(128, 128);
+      for (let i = 0; i < imgData.data.length; i += 4) {
+        const v = Math.random() * 255;
+        imgData.data[i] = imgData.data[i + 1] = imgData.data[i + 2] = v;
+        imgData.data[i + 3] = 18; // low opacity grain
+      }
+      nCtx.putImageData(imgData, 0, 0);
+      noisePattern = ctx.createPattern(nCanvas, 'repeat');
+    }
+    generateNoise();
+
+    // Auto-crop transparent padding
+    function trimImage(img) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = img.width; tempCanvas.height = img.height;
+      const tCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+      tCtx.drawImage(img, 0, 0);
+
+      const pixels = tCtx.getImageData(0, 0, img.width, img.height);
+      const l = pixels.data.length;
+      let bound = { top: null, left: null, right: null, bottom: null };
+
+      for (let i = 0; i < l; i += 4) {
+        if (pixels.data[i + 3] !== 0) {
+          const x = (i / 4) % img.width;
+          const y = Math.floor((i / 4) / img.width);
+          if (bound.top === null || y < bound.top) bound.top = y;
+          if (bound.left === null || x < bound.left) bound.left = x;
+          if (bound.right === null || x > bound.right) bound.right = x;
+          if (bound.bottom === null || y > bound.bottom) bound.bottom = y;
+        }
+      }
+
+      if (bound.top === null) return img; // Empty image fallback
+
+      const trimWidth = bound.right - bound.left + 1;
+      const trimHeight = bound.bottom - bound.top + 1;
+      const trimmedCanvas = document.createElement('canvas');
+      trimmedCanvas.width = trimWidth; trimmedCanvas.height = trimHeight;
+      trimmedCanvas.getContext('2d').putImageData(tCtx.getImageData(bound.left, bound.top, trimWidth, trimHeight), 0, 0);
+      return trimmedCanvas;
+    }
+
+    // Process a single file, setup UI
+    function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      // Batch Processing Loop
+      if (files.length > 1) {
+        document.getElementById('file-info').innerText = `Batch Processing ${files.length} files...`;
+        let delay = 0;
+        Array.from(files).forEach((file, index) => {
+          if (!file.type.startsWith('image/')) return;
+          setTimeout(() => processFile(file, true), delay);
+          delay += 600; // stagger to prevent browser lockup/download block
+        });
+        setTimeout(() => {
+          document.getElementById('file-info').innerText = `Batch complete. Last image shown.`;
+        }, delay + 200);
+      } else {
+        processFile(files[0], false);
+      }
+    }
+
+    function processFile(file, autoDownload) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          currentFileName = file.name ? file.name.replace(/\.[^/.]+$/, "") : 'pasted-image';
+          sourceImage = trimImage(img);
+
+          if (!autoDownload) {
+            document.getElementById('file-info').innerText = `${currentFileName} (Trimmed: ${sourceImage.width}x${sourceImage.height}px)`;
+          }
+
+          document.getElementById('empty-notice').style.display = 'none';
+          canvas.style.display = 'block';
+          document.getElementById('btn-download').disabled = false;
+          render();
+
+          if (autoDownload) downloadPNG(`${currentFileName}-sticker.png`);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+    window.addEventListener('paste', e => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          handleFiles([item.getAsFile()]); break;
+        }
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(eName => {
+      stage.addEventListener(eName, e => { e.preventDefault(); stage.classList.add('drag-over'); });
+    });
+    ['dragleave', 'drop'].forEach(eName => {
+      stage.addEventListener(eName, e => { e.preventDefault(); stage.classList.remove('drag-over'); });
+    });
+    stage.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+    function setStyle(style) {
+      edgeStyle = style;
+      document.getElementById('btn-style-clean').classList.toggle('active', style === 'clean');
+      document.getElementById('btn-style-torn').classList.toggle('active', style === 'torn');
+      document.getElementById('group-roughness').style.display = style === 'torn' ? 'flex' : 'none';
+      render();
+    }
+
+    function setColor(hex, swatchEl, isInner) {
+      if (isInner) {
+        innerColor = hex;
+        document.getElementById('input-inner-picker').value = hex;
+      } else {
+        outerColor = hex;
+        document.getElementById('input-color-picker').value = hex;
+        document.querySelectorAll('#main-color-presets .swatch').forEach(s => s.classList.remove('active'));
+        if (swatchEl) swatchEl.classList.add('active');
+      }
+      render();
+    }
+
+    function setStage(hex, swatchEl, showDots) {
+      stage.style.backgroundColor = hex;
+      stage.style.backgroundImage = showDots ? 'radial-gradient(var(--dot-color) 1.5px, transparent 1.5px)' : 'none';
+      document.querySelectorAll('.stage-presets .swatch').forEach(s => s.classList.remove('active'));
+      swatchEl.classList.add('active');
+    }
+
+    function updateControls() {
+      document.getElementById('val-width').innerText = `${document.getElementById('input-width').value}px`;
+      document.getElementById('val-inner-width').innerText = `${document.getElementById('input-inner-width').value}px`;
+      document.getElementById('val-roughness').innerText = document.getElementById('input-roughness').value;
+      document.getElementById('displacement-map').setAttribute('scale', document.getElementById('input-roughness').value);
+      render();
+    }
+
+    function createDilatedMask(img, color, radius, padding) {
+      const mask = document.createElement('canvas');
+      mask.width = img.width + padding * 2;
+      mask.height = img.height + padding * 2;
+      const mCtx = mask.getContext('2d');
+
+      if (radius <= 0) return mask;
+
+      const silCanvas = document.createElement('canvas');
+      silCanvas.width = img.width; silCanvas.height = img.height;
+      const silCtx = silCanvas.getContext('2d');
+      silCtx.drawImage(img, 0, 0);
+      silCtx.globalCompositeOperation = 'source-in';
+      silCtx.fillStyle = color;
+      silCtx.fillRect(0, 0, img.width, img.height);
+
+      const steps = 36;
+      for (let r = 1; r <= radius; r += 2) {
+        for (let i = 0; i < steps; i++) {
+          const angle = (i * 2 * Math.PI) / steps;
+          mCtx.drawImage(silCanvas, padding + r * Math.cos(angle), padding + r * Math.sin(angle));
+        }
+      }
+      return mask;
+    }
+
+    function render() {
+      if (!sourceImage) return;
+
+      const outerWidth = parseInt(document.getElementById('input-width').value, 10);
+      const innerWidth = parseInt(document.getElementById('input-inner-width').value, 10);
+      const applyTexture = document.getElementById('check-texture').checked;
+      const totalBorder = outerWidth + innerWidth;
+      const padding = totalBorder + 40;
+
+      canvas.width = sourceImage.width + padding * 2;
+      canvas.height = sourceImage.height + padding * 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (totalBorder > 0) {
+        const borderCanvas = document.createElement('canvas');
+        borderCanvas.width = canvas.width; borderCanvas.height = canvas.height;
+        const bCtx = borderCanvas.getContext('2d');
+
+        // Draw Outer Border
+        if (outerWidth > 0) {
+          bCtx.drawImage(createDilatedMask(sourceImage, outerColor, totalBorder, padding), 0, 0);
+        }
+
+        // Draw Inner Accent Border
+        if (innerWidth > 0) {
+          bCtx.drawImage(createDilatedMask(sourceImage, innerColor, innerWidth, padding), 0, 0);
+        }
+
+        // Apply Texture to borders
+        if (applyTexture) {
+          bCtx.globalCompositeOperation = 'source-atop';
+          bCtx.fillStyle = noisePattern;
+          bCtx.fillRect(0, 0, canvas.width, canvas.height);
+          bCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // Apply Torn Edge Filter to Main Canvas
+        ctx.save();
+        if (edgeStyle === 'torn') ctx.filter = 'url(#torn-edge-filter)';
+        ctx.drawImage(borderCanvas, 0, 0);
+        ctx.restore();
+      }
+
+      // Draw Original Image sharply on top
+      ctx.drawImage(sourceImage, padding, padding);
+    }
+
+    function downloadPNG(filename = `${currentFileName}-sticker.png`) {
+      if (!sourceImage) return;
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+
+</html>

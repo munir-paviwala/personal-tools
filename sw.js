@@ -1,4 +1,4 @@
-const CACHE_NAME = 'munir-tools-cache-v5';
+const CACHE_NAME = 'munir-tools-cache-v6';
 const PRECACHE_ASSETS = [
   './',
   'index.html',
@@ -8,6 +8,7 @@ const PRECACHE_ASSETS = [
   'ambient-timer.html',
   'base64-coder.html',
   'slide-overlay.html',
+  'paper-cutout-studio.html',
   'LICENSE',
   'manifest.json',
   'assets/icons/icon-192.png',
