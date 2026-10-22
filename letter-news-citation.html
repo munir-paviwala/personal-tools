@@ -136,10 +136,11 @@
     {id:'title',      label:'Article title',        types:'news', wide:1, item:1},
     {id:'titleShort', label:'Short title',          types:'news', item:1},
     {id:'paper',      label:'Newspaper',            ph:'The Hindu', types:'news', hist:1},
-    {id:'pages',      label:'Page(s)',              ph:'4 or 4\u20135', types:'news', item:1},
     {id:'date',       label:'Date',                 ph:'Month Day, Year', types:'letter other news', date:1, item:1},
+    {id:'pages',      label:'Page(s) (optional)',   ph:'4 or 4\u20135', types:'letter other news', item:1},
     {id:'box',        label:'Box',                  types:'letter other'},
     {id:'folder',     label:'Folder',               types:'letter other'},
+    {id:'folderTitle',label:'Folder title (optional)', ph:'Correspondence, 1946', types:'letter other', wide:1},
     {id:'collection', label:'Collection / fonds',   types:'letter other', wide:1, hist:1},
     {id:'collShort',  label:'Short collection name',types:'letter other', hist:1},
     {id:'repo',       label:'Repository',           types:'letter other', hist:1},
@@ -206,17 +207,18 @@
     var folder = v('folder') ? 'folder ' + esc(v('folder')) : '';
     var coll = t('collection');
     var collS = t('collShort') || coll;
-    var archive = [box, folder, coll, t('repo'), t('loc'), esc(v('url'))];
+    var archive = [box, folder, t('folderTitle'), coll, t('repo'), t('loc'), esc(v('url'))];
+    var pgItem = pagesStr();
     var first = '', next = '';
 
     if (type === 'letter') {
       var pair = [t('writer'), t('recipient')].filter(Boolean).join(' to ');
-      first = j([pair, date].concat(archive)) + '.';
+      first = j([pair, date, pgItem].concat(archive)) + '.';
       var sp = [esc(lastNames(v('writer'))), esc(lastNames(v('recipient')))].filter(Boolean).join(' to ');
-      next = j([sp, date, collS]) + '.';
+      next = j([sp, date, pgItem, collS]) + '.';
     } else if (type === 'other') {
-      first = j([t('desc'), date].concat(archive)) + '.';
-      next = j([smart(v('descShort') || autoShort(v('desc'))), date, collS]) + '.';
+      first = j([t('desc'), date, pgItem].concat(archive)) + '.';
+      next = j([smart(v('descShort') || autoShort(v('desc'))), date, pgItem, collS]) + '.';
     } else {
       var title = v('title'), paper = v('paper'), author = v('author');
       var short = v('titleShort') || autoShort(title);
