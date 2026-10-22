@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,9 @@
             --white-silk: #f1f1f1;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--deep-indigo);
@@ -74,17 +77,19 @@
         }
 
         .intro {
-        font-family: 'VT323', monospace;
-        font-size: 1.5rem;
-        line-height: 1.3;
-        text-align: left;
-        margin-bottom: 40px;
-        background: #000000; /* Harsh black like a terminal */
-        color: var(--marigold);
-        padding: 20px;
-        border: 4px inset var(--burnt-orange); /* Classic 90s 3D inset border */
-        text-transform: uppercase;
-        box-shadow: 8px 8px 0px var(--peacock);
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            line-height: 1.3;
+            text-align: left;
+            margin-bottom: 40px;
+            background: #000000;
+            /* Harsh black like a terminal */
+            color: var(--marigold);
+            padding: 20px;
+            border: 4px inset var(--burnt-orange);
+            /* Classic 90s 3D inset border */
+            text-transform: uppercase;
+            box-shadow: 8px 8px 0px var(--peacock);
         }
 
         /* Directory List */
@@ -153,12 +158,32 @@
             text-align: center;
             text-transform: uppercase;
         }
+
         @media (max-width: 600px) {
-            .hub-container { padding: 20px; border-width: 4px; box-shadow: 8px 8px 0px var(--peacock); }
-            h1 { font-size: 2.5rem; margin-top: 50px; } /* Extra top margin for the status bar */
-            .tool-link { padding: 15px; }
-            .tool-number { font-size: 2rem; margin-right: 15px; }
-            .tool-title { font-size: 1.2rem; }
+            .hub-container {
+                padding: 20px;
+                border-width: 4px;
+                box-shadow: 8px 8px 0px var(--peacock);
+            }
+
+            h1 {
+                font-size: 2.5rem;
+                margin-top: 50px;
+            }
+
+            /* Extra top margin for the status bar */
+            .tool-link {
+                padding: 15px;
+            }
+
+            .tool-number {
+                font-size: 2rem;
+                margin-right: 15px;
+            }
+
+            .tool-title {
+                font-size: 1.2rem;
+            }
         }
 
         /* Modal for download instructions */
@@ -172,6 +197,7 @@
             justify-content: center;
             padding: 20px;
         }
+
         .download-modal-content {
             background: var(--deep-indigo);
             border: 6px solid var(--marigold);
@@ -180,17 +206,20 @@
             text-align: center;
             box-shadow: 15px 15px 0px var(--peacock);
         }
+
         .download-modal h2 {
             font-family: 'VT323', monospace;
             color: var(--marigold);
             font-size: 2.5rem;
             margin-top: 0;
         }
+
         .download-modal p {
             font-size: 1.1rem;
             line-height: 1.5;
             margin: 20px 0;
         }
+
         .download-progress {
             height: 10px;
             background: rgba(255, 255, 255, 0.1);
@@ -198,6 +227,7 @@
             margin: 20px 0;
             overflow: hidden;
         }
+
         #download-bar {
             height: 100%;
             width: 0%;
@@ -206,17 +236,19 @@
         }
     </style>
 </head>
+
 <body>
 
     <div id="download-modal-container"></div>
 
     <div class="hub-container">
         <div class="status-bar">System Status: ONLINE // LOCAL ONLY</div>
-        
+
         <h1>MUNIR'S PERSONAL TOOLS LIBRARY</h1>
-        
+
         <p class="intro">
-            These are my tools for productivity and just daily stuff. Mostly privacy-focused since they run entirely in your browser. No servers, no data sharing. Just bright colors and getting things done.
+            These are my tools for productivity and just daily stuff. Mostly privacy-focused since they run entirely in
+            your browser. No servers, no data sharing. Just bright colors and getting things done.
         </p>
 
         <div class="tool-list">
@@ -272,7 +304,8 @@
                 <div class="tool-number">07</div>
                 <div class="tool-details">
                     <span class="tool-title">Sticker & Cutout Studio</span>
-                    <span class="tool-desc">Turn images into stickers and cutouts with custom borders, torn edges, and textures.</span>
+                    <span class="tool-desc">Turn images into stickers and cutouts with custom borders, torn edges, and
+                        textures.</span>
                 </div>
             </a>
         </div>
@@ -281,60 +314,65 @@
     <footer>
         &copy; 2026 // Built for personal utility<br><br>
         <div style="display:flex; justify-content:center; gap:10px;">
-            <button onclick="wipeAllData()" style="background: var(--burnt-orange); color: var(--white-silk); padding: 10px; border: 2px solid var(--marigold); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase;">Wipe All Local Data</button>
-            <button id="install-btn" style="display: none; background: var(--peacock); color: var(--deep-indigo); padding: 10px; border: 2px solid var(--white-silk); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold;">Install Offline App</button>
+            <button onclick="wipeAllData()"
+                style="background: var(--burnt-orange); color: var(--white-silk); padding: 10px; border: 2px solid var(--marigold); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase;">Wipe
+                All Local Data</button>
+            <button id="install-btn"
+                style="display: none; background: var(--peacock); color: var(--deep-indigo); padding: 10px; border: 2px solid var(--white-silk); cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; font-weight: bold;">Install
+                Offline App</button>
         </div>
     </footer>
 
     <script>
-    function wipeAllData() {
-        if(confirm("Are you sure? This will delete all saved themes, preferences, and your markdown reading history.")) {
-            localStorage.clear();
-            sessionStorage.clear();
-            alert("All local data has been successfully wiped. System clean.");
-            location.reload();
+        function wipeAllData() {
+            if (confirm("Are you sure? This will delete all saved themes, preferences, and your markdown reading history.")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert("All local data has been successfully wiped. System clean.");
+                location.reload();
+            }
         }
-    }
 
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker registered successfully!', reg.scope))
-                .catch(err => console.error('Service Worker registration failed:', err));
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can install the PWA
+            installBtn.style.display = 'block';
         });
-    }
 
-    // PWA Install Prompt
-    let deferredPrompt;
-    const installBtn = document.getElementById('install-btn');
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Show the prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again
+            deferredPrompt = null;
+            // Hide the install button
+            installBtn.style.display = 'none';
+        });
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault();
-        // Stash the event so it can be triggered later.
-        deferredPrompt = e;
-        // Update UI to notify the user they can install the PWA
-        installBtn.style.display = 'block';
-    });
-
-    installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        // Show the prompt
-        deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        // We've used the prompt, and can't use it again
-        deferredPrompt = null;
-        // Hide the install button
-        installBtn.style.display = 'none';
-    });
-
-    window.addEventListener('appinstalled', (evt) => {
-        console.log('PWA was installed successfully!');
-        installBtn.style.display = 'none';
-    });
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA was installed successfully!');
+            installBtn.style.display = 'none';
+        });
     </script>
 </body>
+
 </html>
