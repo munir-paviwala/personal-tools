@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chicago Notes</title>
+<style>
+  :root{
+    --bg:#f1ece2; --paper:#faf7f0; --ink:#3b372f; --muted:#8a8374;
+    --line:#ddd5c4; --accent:#7a8566; --accent-soft:#e6e9dc; --wood:#b99b78;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    line-height:1.5;
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg,rgba(60,50,30,.018) 0 1px,transparent 1px 3px),
+      repeating-linear-gradient(90deg,rgba(60,50,30,.018) 0 1px,transparent 1px 3px);
+  }
+  .wrap{max-width:1020px;margin:0 auto;padding:2.5rem 1.25rem 3rem}
+  header{margin-bottom:1.5rem}
+  h1{font-weight:400;font-size:1.7rem;letter-spacing:.01em;margin:0}
+  .sub{color:var(--muted);font-size:.95rem;margin:.2rem 0 0}
+  .tabs{display:flex;gap:.25rem;margin-bottom:1rem;border-bottom:1px solid var(--line)}
+  .tab{
+    font:inherit;font-size:.95rem;background:none;border:0;border-bottom:2px solid transparent;
+    padding:.5rem .9rem;color:var(--muted);cursor:pointer;margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+  .cols{display:grid;grid-template-columns:1fr;gap:1rem;align-items:start}
+  @media(min-width:900px){.cols{grid-template-columns:1.1fr 1fr}.out{position:sticky;top:1rem}}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:1.25rem 1.4rem;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:.9rem 1.1rem}
+  .f{min-width:0}
+  .f[hidden]{display:none}
+  .f.wide{grid-column:1/-1}
+  label.l{display:block;font:500 .72rem/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.1rem}
+  input[type=text]{
+    width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);
+    font:inherit;font-size:1rem;color:var(--ink);padding:.35rem 0;border-radius:0;outline:none;
+  }
+  input[type=text]:focus{border-bottom-color:var(--accent)}
+  input::placeholder{color:#b8b0a0}
+  .chk{display:flex;align-items:center;gap:.4rem;font:.8rem system-ui,sans-serif;color:var(--muted);margin-top:.3rem;cursor:pointer}
+  .chk input{accent-color:var(--accent)}
+  .chips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+  .chip{
+    font:.75rem system-ui,sans-serif;background:var(--accent-soft);color:#4d5640;border:0;border-radius:999px;
+    padding:.15rem .3rem .15rem .6rem;cursor:pointer;max-width:100%;display:inline-flex;gap:.3rem;align-items:center;
+  }
+  .chip span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:15rem}
+  .chip:hover{background:#d9dfcb}
+  .chip .x{opacity:.45;padding:0 .3rem;border-radius:50%}
+  .chip .x:hover{opacity:1}
+  .out h2{font:500 .72rem/1.2 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 .4rem}
+  .note{
+    background:#fff;border:1px solid var(--line);border-left:3px solid var(--wood);padding:.7rem .9rem;
+    min-height:3.2rem;font-size:1rem;overflow-wrap:anywhere;user-select:text;
+  }
+  .empty{color:#b8b0a0;font-style:italic}
+  .block{margin-bottom:1.2rem}
+  .btn{
+    font:.85rem system-ui,sans-serif;background:transparent;color:var(--accent);border:1px solid var(--accent);
+    border-radius:3px;padding:.35rem .8rem;cursor:pointer;margin-top:.5rem;
+  }
+  .btn:hover{background:var(--accent);color:#fff}
+  .btn.quiet{color:var(--muted);border-color:var(--line)}
+  .btn.quiet:hover{background:var(--line);color:var(--ink)}
+  .row{display:flex;gap:.5rem;flex-wrap:wrap}
+  footer{margin-top:1.5rem;color:var(--muted);font:.78rem system-ui,sans-serif;display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+  footer button{font:inherit;color:var(--muted);background:none;border:0;border-bottom:1px dotted var(--muted);cursor:pointer;padding:0}
+  #toast{
+    position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+    font:.85rem system-ui,sans-serif;padding:.45rem .9rem;border-radius:3px;opacity:0;transition:opacity .2s;pointer-events:none;
+  }
+  #toast.on{opacity:.92}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Chicago Notes</h1>
+    <p class="sub">Footnote citations for archival letters, documents and newspapers.</p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-type="letter">Letter</button>
+    <button class="tab" data-type="other">Other document</button>
+    <button class="tab" data-type="news">Newspaper</button>
+  </nav>
+
+  <div class="cols">
+    <section class="card form" id="form"></section>
+
+    <section class="card out">
+      <div class="block">
+        <h2>First note</h2>
+        <div class="note" id="first"></div>
+        <button class="btn" id="copyFirst">Copy first note</button>
+      </div>
+      <div class="block">
+        <h2>Subsequent note</h2>
+        <div class="note" id="next"></div>
+        <button class="btn" id="copyNext">Copy subsequent note</button>
+      </div>
+      <div class="row">
+        <button class="btn quiet" id="nextItem" title="Clears date, title, pages and URL; keeps names, box, folder and archive details">Next item</button>
+        <button class="btn quiet" id="clearAll">Clear all fields</button>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Everything is saved in this browser only.</span>
+    <button id="clearHist">Forget saved suggestions</button>
+  </footer>
+</main>
+<div id="toast"></div>
+
+<script>
+(function(){
+  var KEY = 'chicago-cite-v1';
+  var $ = function(id){ return document.getElementById(id); };
+
+  // item:1 = cleared by "Next item"; hist:1 = remembered as suggestion chips
+  var FIELDS = [
+    {id:'writer',     label:'Writer',               ph:'First Last', types:'letter', hist:1},
+    {id:'recipient',  label:'Recipient',            ph:'First Last', types:'letter', hist:1},
+    {id:'desc',       label:'Description',          ph:'Memorandum on land reform', types:'other', wide:1, item:1},
+    {id:'descShort',  label:'Short description',    types:'other', item:1},
+    {id:'author',     label:'Author (if signed)',   ph:'First Last', types:'news', hist:1},
+    {id:'title',      label:'Article title',        types:'news', wide:1, item:1},
+    {id:'titleShort', label:'Short title',          types:'news', item:1},
+    {id:'paper',      label:'Newspaper',            ph:'The Hindu', types:'news', hist:1},
+    {id:'pages',      label:'Page(s)',              ph:'4 or 4\u20135', types:'news', item:1},
+    {id:'date',       label:'Date',                 ph:'Month Day, Year', types:'letter other news', date:1, item:1},
+    {id:'box',        label:'Box',                  types:'letter other'},
+    {id:'folder',     label:'Folder',               types:'letter other'},
+    {id:'collection', label:'Collection / fonds',   types:'letter other', wide:1, hist:1},
+    {id:'collShort',  label:'Short collection name',types:'letter other', hist:1},
+    {id:'repo',       label:'Repository',           types:'letter other', hist:1},
+    {id:'loc',        label:'City, State',          ph:'Boston, MA', types:'letter other', hist:1},
+    {id:'url',        label:'URL / permalink',      types:'letter other news', wide:1, item:1}
+  ];
+
+  var store = {type:'letter', vals:{}, hist:{}, presets:{}};
+  try { var s = JSON.parse(localStorage.getItem(KEY)); if (s) store = Object.assign(store, s); } catch(e){}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
+
+  // ---------- form ----------
+  var form = $('form');
+  FIELDS.forEach(function(f){
+    var d = document.createElement('div');
+    d.className = 'f' + (f.wide ? ' wide' : '');
+    d.dataset.types = f.types;
+    var html = '<label class="l" for="'+f.id+'">'+f.label+'</label>' +
+               '<input type="text" id="'+f.id+'" autocomplete="off" placeholder="'+(f.ph||'')+'">';
+    if (f.date) html += '<label class="chk"><input type="checkbox" id="undated"> Undated or estimated (put in brackets)</label>';
+    if (f.hist) html += '<div class="chips" id="chips-'+f.id+'"></div>';
+    d.innerHTML = html;
+    form.appendChild(d);
+  });
+
+  // ---------- helpers ----------
+  var v = function(id){ return $(id).value.trim(); };
+  var esc = function(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var smart = function(s){
+    return esc(s.replace(/(\w)'(\w)/g,'$1\u2019$2')
+      .replace(/(^|[\s(\[\u2014])"/g,'$1\u201c').replace(/"/g,'\u201d')
+      .replace(/(^|[\s(\[])'/g,'$1\u2018').replace(/'/g,'\u2019'));
+  };
+  var t = function(id){ return smart(v(id)); };
+  var j = function(a){ return a.filter(Boolean).join(', '); };
+
+  function lastNames(s){
+    return s.split(/\s+(?:and|&)\s+|;/i).map(function(n){
+      n = n.trim().replace(/,?\s+(?:Jr|Sr|II|III|IV)\.?$/i,'');
+      var p = n.split(/\s+/); return p[p.length-1];
+    }).filter(Boolean).join(' and ');
+  }
+  function autoShort(s){
+    var w = s.trim().split(/\s+/).filter(Boolean);
+    if (w.length > 4 && /^(a|an|the)$/i.test(w[0])) w = w.slice(1);
+    return w.slice(0,4).join(' ').replace(/[,;:.\-\u2013\u2014]+$/,'');
+  }
+  function dateStr(){
+    var d = v('date');
+    if ($('undated').checked) return d ? '['+esc(d)+']' : '[n.d.]';
+    return esc(d);
+  }
+  function pagesStr(){
+    var p = v('pages'); if (!p) return '';
+    if (/^pp?\./i.test(p)) return esc(p);
+    p = p.replace(/(\d)\s*-\s*(\d)/g,'$1\u2013$2');
+    return (/[\u2013,]/.test(p) ? 'pp. ' : 'p. ') + esc(p);
+  }
+
+  // ---------- note builders ----------
+  function build(type){
+    var date = dateStr();
+    var box = v('box') ? 'box ' + esc(v('box')) : '';
+    var folder = v('folder') ? 'folder ' + esc(v('folder')) : '';
+    var coll = t('collection');
+    var collS = t('collShort') || coll;
+    var archive = [box, folder, coll, t('repo'), t('loc'), esc(v('url'))];
+    var first = '', next = '';
+
+    if (type === 'letter') {
+      var pair = [t('writer'), t('recipient')].filter(Boolean).join(' to ');
+      first = j([pair, date].concat(archive)) + '.';
+      var sp = [esc(lastNames(v('writer'))), esc(lastNames(v('recipient')))].filter(Boolean).join(' to ');
+      next = j([sp, date, collS]) + '.';
+    } else if (type === 'other') {
+      first = j([t('desc'), date].concat(archive)) + '.';
+      next = j([smart(v('descShort') || autoShort(v('desc'))), date, collS]) + '.';
+    } else {
+      var title = v('title'), paper = v('paper'), author = v('author');
+      var short = v('titleShort') || autoShort(title);
+      var paperH = paper ? '<i>' + smart(paper) + '</i>' : '';
+      var pg = pagesStr();
+      if (title) {
+        var rest = [paperH, date, pg, esc(v('url'))].filter(Boolean);
+        var q = /[?!]$/.test(title) ? '\u201c'+smart(title)+'\u201d' : '\u201c'+smart(title)+(rest.length?',':'.')+'\u201d';
+        first = (author ? t('author') + ', ' : '') + q + (rest.length ? ' ' + rest.join(', ') + '.' : '');
+      }
+      if (short) {
+        var lead = author ? esc(lastNames(author)) + ', ' : '';
+        var tail = author ? [pg] : [paperH, pg];
+        tail = tail.filter(Boolean);
+        var sq = /[?!]$/.test(short) ? '\u201c'+smart(short)+'\u201d' : '\u201c'+smart(short)+(tail.length?',':'.')+'\u201d';
+        next = lead + sq + (tail.length ? ' ' + tail.join(', ') + '.' : '');
+      }
+    }
+    if (first === '.') first = '';
+    if (next === '.') next = '';
+    return {first:first, next:next};
+  }
+
+  function plain(html){ var d = document.createElement('div'); d.innerHTML = html; return d.textContent; }
+  var EMPTY = '<span class="empty">Fill in the form to see the note.</span>';
+
+  // ---------- chips / history ----------
+  function topHist(id){
+    var h = store.hist[id] || {};
+    return Object.keys(h).sort(function(a,b){ return h[b]-h[a]; });
+  }
+  function renderChips(){
+    FIELDS.filter(function(f){ return f.hist; }).forEach(function(f){
+      var box = $('chips-'+f.id); box.innerHTML = '';
+      var cur = v(f.id);
+      topHist(f.id).filter(function(x){ return x !== cur; }).slice(0,5).forEach(function(val){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip'; b.title = val;
+        var a = document.createElement('span'); a.textContent = val;
+        var x = document.createElement('span'); x.className = 'x'; x.textContent = '\u00d7'; x.title = 'Forget this';
+        b.appendChild(a); b.appendChild(x);
+        b.onclick = function(e){
+          if (e.target === x) {
+            delete store.hist[f.id][val];
+            if (f.id === 'collection') delete store.presets[val];
+            save(); renderChips(); return;
+          }
+          $(f.id).value = val;
+          if (f.id === 'collection' && store.presets[val]) {
+            var p = store.presets[val];
+            $('collShort').value = p.short || ''; $('repo').value = p.repo || ''; $('loc').value = p.loc || '';
+          }
+          update();
+        };
+        box.appendChild(b);
+      });
+    });
+  }
+  function visible(id){ return !$(id).closest('.f').hidden; }
+  function remember(){
+    FIELDS.filter(function(f){ return f.hist; }).forEach(function(f){
+      var val = v(f.id);
+      if (!val || !visible(f.id)) return;
+      var h = store.hist[f.id] = store.hist[f.id] || {};
+      h[val] = (h[val] || 0) + 1;
+    });
+    var c = v('collection');
+    if (c && visible('collection')) store.presets[c] = {short:v('collShort'), repo:v('repo'), loc:v('loc')};
+    save(); renderChips();
+  }
+
+  // ---------- update / ui ----------
+  function update(){
+    $('descShort').placeholder = autoShort(v('desc')) || 'defaults to first four words';
+    $('titleShort').placeholder = autoShort(v('title')) || 'defaults to first four words';
+    $('collShort').placeholder = v('collection') || 'defaults to full name';
+    var out = build(store.type);
+    $('first').innerHTML = out.first || EMPTY;
+    $('next').innerHTML = out.next || EMPTY;
+    FIELDS.forEach(function(f){ store.vals[f.id] = $(f.id).value; });
+    store.vals.undated = $('undated').checked;
+    save(); renderChips();
+  }
+  function setType(tp){
+    store.type = tp;
+    document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('active', b.dataset.type === tp); });
+    document.querySelectorAll('.f').forEach(function(d){ d.hidden = d.dataset.types.split(' ').indexOf(tp) < 0; });
+    update();
+  }
+  var toastTimer;
+  function toast(m){
+    var el = $('toast'); el.textContent = m; el.classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ el.classList.remove('on'); }, 1400);
+  }
+  function copy(html){
+    if (!html) { toast('Nothing to copy yet'); return; }
+    var text = plain(html);
+    function fallback(){
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); } catch(e){} ta.remove();
+    }
+    var done = function(){ remember(); toast('Copied'); };
+    if (navigator.clipboard && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], {type:'text/html'}),
+        'text/plain': new Blob([text], {type:'text/plain'})
+      })]).then(done, function(){ fallback(); done(); });
+    } else { fallback(); done(); }
+  }
+
+  // ---------- wiring ----------
+  FIELDS.forEach(function(f){
+    if (store.vals[f.id] != null) $(f.id).value = store.vals[f.id];
+    $(f.id).addEventListener('input', update);
+  });
+  $('undated').checked = !!store.vals.undated;
+  $('undated').addEventListener('change', update);
+
+  document.querySelectorAll('.tab').forEach(function(b){ b.onclick = function(){ setType(b.dataset.type); }; });
+  $('copyFirst').onclick = function(){ copy($('first').querySelector('.empty') ? '' : $('first').innerHTML); };
+  $('copyNext').onclick  = function(){ copy($('next').querySelector('.empty') ? '' : $('next').innerHTML); };
+  $('nextItem').onclick = function(){
+    remember();
+    FIELDS.forEach(function(f){ if (f.item) $(f.id).value = ''; });
+    $('undated').checked = false;
+    update();
+    var first = document.querySelector('.f:not([hidden]) input[type=text]'); if (first) first.focus();
+  };
+  $('clearAll').onclick = function(){
+    FIELDS.forEach(function(f){ $(f.id).value = ''; });
+    $('undated').checked = false; update();
+  };
+  $('clearHist').onclick = function(){
+    if (confirm('Forget all saved suggestions in this browser?')) { store.hist = {}; store.presets = {}; save(); renderChips(); }
+  };
+
+  setType(store.type);
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ const PRECACHE_ASSETS = [
   'index.html',
   'dangerous-writer.html',
   'metadata-eraser.html',
+  'letter-news-citation.html',
   'md-reader.html',
   'ambient-timer.html',
   'base64-coder.html',
@@ -17,7 +18,7 @@ const PRECACHE_ASSETS = [
   'assets/css/vt323.css',
   'assets/js/marked.min.js',
   'assets/js/jszip.min.js',
-  
+
   // Fonts
   'assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff2',
@@ -29,7 +30,7 @@ const PRECACHE_ASSETS = [
   'assets/fonts/space-grotesk/space-grotesk-latin-600-normal.woff2',
   'assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff2',
-  
+
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-300-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-300-normal.woff2',
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-400-normal.woff',
@@ -40,7 +41,7 @@ const PRECACHE_ASSETS = [
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-600-normal.woff2',
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-700-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-latin-ext-700-normal.woff2',
-  
+
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-300-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-300-normal.woff2',
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-400-normal.woff',
@@ -51,7 +52,7 @@ const PRECACHE_ASSETS = [
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-600-normal.woff2',
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-700-normal.woff',
   'assets/fonts/space-grotesk/space-grotesk-vietnamese-700-normal.woff2',
-  
+
   'assets/fonts/vt323/vt323-latin-400-normal.woff',
   'assets/fonts/vt323/vt323-latin-400-normal.woff2',
   'assets/fonts/vt323/vt323-latin-ext-400-normal.woff',
@@ -144,7 +145,7 @@ function handleRangeRequest(request, cachedResponse) {
       // Slice the buffer according to the range
       const slicedBuffer = arrayBuffer.slice(start, end + 1);
       const responseHeaders = new Headers(cachedResponse.headers);
-      
+
       responseHeaders.set('Content-Range', `bytes ${start}-${end}/${arrayBuffer.byteLength}`);
       responseHeaders.set('Content-Length', slicedBuffer.byteLength);
 
